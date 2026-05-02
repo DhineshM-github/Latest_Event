@@ -148,6 +148,7 @@ export const PolicyPage = () => {
     if (!id) return;
 
     try {
+      setLoading(true);
       const res = await deletePolicy(id);
       if (res.data.status) {
         showToast("✓ Policy Deleted Successfully!", "success");
@@ -161,6 +162,8 @@ export const PolicyPage = () => {
       console.error("Error deleting policy:", error);
       showToast("Error deleting policy", "error");
       setDeleteModal({ isOpen: false, id: null });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -615,9 +618,10 @@ export const PolicyPage = () => {
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition shadow-lg w-full"
+                disabled={loading}
+                className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition shadow-lg w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete
+                {loading ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

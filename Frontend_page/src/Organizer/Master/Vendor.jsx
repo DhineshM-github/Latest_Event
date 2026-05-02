@@ -13,6 +13,7 @@ export const VendorPage = () => {
   const [fullPreview, setFullPreview] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
+  const [loading, setLoading] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -253,6 +254,7 @@ export const VendorPage = () => {
     }
 
     try {
+      setLoading(true);
       await createVendor({
         ...form,
         documents: documents.filter(
@@ -266,6 +268,8 @@ export const VendorPage = () => {
       loadVendors();
     } catch (error) {
       showToast("Failed to create vendor", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -291,6 +295,7 @@ export const VendorPage = () => {
     if (!id) return;
     
     try {
+      setLoading(true);
       await deleteVendor(id);
       showToast("✓ Vendor Deleted Successfully!", "success");
       setDeleteModal({ isOpen: false, id: null });
@@ -298,6 +303,8 @@ export const VendorPage = () => {
     } catch (error) {
       showToast("Failed to delete vendor", "error");
       setDeleteModal({ isOpen: false, id: null });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -871,9 +878,10 @@ export const VendorPage = () => {
 
                 <button
                   type="submit"
-                  className="bg-sky-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-sky-700 transition shadow-lg transform hover:scale-[1.02]"
+                  disabled={loading}
+                  className="bg-sky-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-sky-700 transition shadow-lg transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  Save Vendor
+                  {loading ? "Saving..." : "Save Vendor"}
                 </button>
               </div>
             </form>
@@ -1107,9 +1115,10 @@ export const VendorPage = () => {
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition shadow-lg w-full"
+                disabled={loading}
+                className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition shadow-lg w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete
+                {loading ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

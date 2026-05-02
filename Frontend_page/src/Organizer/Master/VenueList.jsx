@@ -43,6 +43,7 @@ export const Venuepage = () => {
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const [loading, setLoading] = useState(false);
 
   const showNotification = (message, type = "success") => {
     setToast({ show: true, message, type });
@@ -229,6 +230,7 @@ export const Venuepage = () => {
     }
 
     try {
+      setLoading(true);
       await createVenue({
         ...form,
         documents: documents.filter(
@@ -243,6 +245,8 @@ export const Venuepage = () => {
     } catch (error) {
       console.error("Failed to create venue:", error);
       showNotification("Failed to create venue", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -261,6 +265,7 @@ export const Venuepage = () => {
   const executeDelete = async () => {
     if (!deleteConfirm.id) return;
     try {
+      setLoading(true);
       await deleteVenue(deleteConfirm.id);
       showNotification("Venue deleted successfully!", "success");
       setDeleteConfirm({ show: false, id: null });
@@ -268,6 +273,8 @@ export const Venuepage = () => {
     } catch (error) {
       console.error("Failed to delete venue:", error);
       showNotification("Failed to delete venue", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -726,9 +733,10 @@ export const Venuepage = () => {
               <button
                 type="submit"
                 onClick={handleSubmit}
-                className="px-6 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-bold shadow-md transition transform hover:scale-105"
+                disabled={loading}
+                className="px-6 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-bold shadow-md transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                Save Venue
+                {loading ? "Saving..." : "Save Venue"}
               </button>
             </div>
           </div>
@@ -762,9 +770,10 @@ export const Venuepage = () => {
               </button>
               <button
                 onClick={executeDelete}
-                className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg shadow-red-200 transition-all active:scale-95"
+                disabled={loading}
+                className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg shadow-red-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Yes, Delete
+                {loading ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>
