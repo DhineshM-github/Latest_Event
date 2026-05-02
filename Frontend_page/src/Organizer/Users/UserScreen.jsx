@@ -9,6 +9,8 @@ const modules = ["Dashboard", "Event", "Program", "Approval", "Accounts", "Spons
 
 const permissions = ["create", "update", "delete", "view", "print", "approval"];
 
+const rows = []; // Placeholder data
+
 export default function UserWiseScreenMapping() {
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
@@ -19,7 +21,7 @@ export default function UserWiseScreenMapping() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const totalPages = 1;
+  const totalPages = Math.ceil(rows.length / pageSize) || 1;
 
   const toggleHeader = (perm) => {
     setHeaderChecks((prev) => ({ ...prev, [perm]: !prev[perm] }));

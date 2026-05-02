@@ -1,11 +1,30 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarDays, Store,LogOut } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { clearUser } from "../Redux/userSlice";
+import { CalendarDays, Store, LogOut } from "lucide-react";
 
 
 const ExhibitorNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+   const handleLogout = () => {
+    // Clear Session Storage
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("role");
+    sessionStorage.removeItem("id");
+    sessionStorage.removeItem("name");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("userName");
+
+    // Clear Redux State
+    dispatch(clearUser());
+
+    // Navigate to Login
+    navigate("/");
+  };
 
   const navItem = (path) =>
     `px-4 py-2 rounded-lg cursor-pointer ${
@@ -36,10 +55,7 @@ const ExhibitorNavbar = () => {
         </div>
 
         <button
-  onClick={() => {
-    sessionStorage.clear();
-    navigate("/Login");
-  }}
+   onClick={handleLogout}
   className="ml-2 flex items-center gap-2 px-3 py-2 
              text-red-600 bg-red-50 
              hover:bg-red-100 hover:text-red-700

@@ -13,7 +13,7 @@ const BADGE_STYLES = {
 };
 
 const Badge = ({ value }) => {
-  const displayValue = value ? value.charAt(0).toUpperCase() + value.slice(1) : "Unknown";
+  const displayValue = value && value !== "" ? value.charAt(0).toUpperCase() + value.slice(1) : "-";
   const cls = BADGE_STYLES[displayValue] ?? "bg-gray-100 text-gray-500";
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}`}>
@@ -184,7 +184,7 @@ export default function ExhibitorTable() {
                             <Badge value={row[col.key]} />
                           ) : (
                             <span className={col.key === 'company_name' ? "font-bold text-slate-800" : ""}>
-                              {row[col.key] ?? "—"}
+                              {row[col.key] && row[col.key] !== "" ? row[col.key] : "-"}
                             </span>
                           )}
                         </td>

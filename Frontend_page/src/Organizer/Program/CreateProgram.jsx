@@ -19,6 +19,7 @@ export default function CreateProgram() {
     name: "", code: "", category: "", type: "", start: "", end: "", venue: "", maxPart: "", budget: "", coordName: "", coordEmail: "", desc: "", status: "Active",
   });
   const [toast, setToast] = useState(false);
+  const [errors, setErrors] = useState({ name: "", code: "" });
 
   useEffect(() => {
     fetchEvents();
@@ -61,6 +62,14 @@ export default function CreateProgram() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
+    // Custom validation
+    const newErrors = { name: "", code: "" };
+    if (!formData.name.trim()) newErrors.name = "Program Name is required";
+    if (!formData.code.trim()) newErrors.code = "Program Code is required";
+    setErrors(newErrors);
+    if (newErrors.name || newErrors.code) return;
+
     try {
       await createProgramAPI({ ...formData, event_id: selectedEvent.id });
       setToast(true);
@@ -70,6 +79,7 @@ export default function CreateProgram() {
         setFormData({
           name: "", code: "", category: "", type: "", start: "", end: "", venue: "", maxPart: "", budget: "", coordName: "", coordEmail: "", desc: "", status: "Active"
         });
+        setErrors({ name: "", code: "" });
         fetchPrograms(selectedEvent.id);
         fetchEvents();
       }, 2000);
@@ -325,14 +335,22 @@ export default function CreateProgram() {
                       Program Name <span className="text-red-500">*</span>
                     </label>
                     <input
-                      required
                       name="name"
                       value={formData.name}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^a-zA-Z ]/g, "");
+                        setFormData({ ...formData, name: val });
+                        if (val.trim()) setErrors(prev => ({ ...prev, name: "" }));
+                      }}
                       type="text"
-                      className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+                      maxLength={20}
+                      className={`w-full border rounded px-3 py-2 outline-none focus:border-blue-500 ${errors.name ? "border-red-400 bg-red-50" : "border-gray-300"}`}
                       placeholder="e.g. Inaugural Session"
                     />
+                    <div className="flex justify-between items-center mt-1">
+                      {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
+                      <span className="text-xs text-gray-400 ml-auto">{formData.name.length}/20</span>
+                    </div>
                   </div>
 
                   {/* Program Code */}
@@ -341,28 +359,35 @@ export default function CreateProgram() {
                       Program Code <span className="text-red-500">*</span>
                     </label>
                     <input
-                      required
                       name="code"
                       value={formData.code}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        if (e.target.value.trim()) setErrors(prev => ({ ...prev, code: "" }));
+                      }}
                       type="text"
-                      className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+                      maxLength={20}
+                      className={`w-full border rounded px-3 py-2 outline-none focus:border-blue-500 ${errors.code ? "border-red-400 bg-red-50" : "border-gray-300"}`}
                       placeholder="e.g. PRG-001"
                     />
+                    <div className="flex justify-between items-center mt-1">
+                      {errors.code && <p className="text-red-500 text-xs">{errors.code}</p>}
+                      <span className="text-xs text-gray-400 ml-auto">{formData.code.length}/20</span>
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-gray-600 mb-1 font-medium">Category</label>
-                    <input name="category" value={formData.category} onChange={handleInputChange} type="text" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" placeholder="e.g. Keynote" />
-                  </div>
-                  <div>
-                    <label className="block text-gray-600 mb-1 font-medium">Event Type</label>
-                    <select name="type" value={formData.type} onChange={handleInputChange} className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500 bg-white">
-                      <option value="">Select Type</option>
-                      <option value="Workshop">Workshop</option>
-                      <option value="Seminar">Seminar</option>
-                      <option value="Panel">Panel Discussion</option>
-                    </select>
+                    <input
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      type="text"
+                      maxLength={20}
+                      className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+                      placeholder="e.g. Keynote"
+                    />
+                    <span className="text-xs text-gray-400 float-right mt-1">{formData.category.length}/20</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -379,22 +404,73 @@ export default function CreateProgram() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-gray-600 mb-1 font-medium">Venue</label>
-                    <input name="venue" value={formData.venue} onChange={handleInputChange} type="text" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" placeholder="Hall A" />
+                    <input
+                      name="venue"
+                      value={formData.venue}
+                      onChange={handleInputChange}
+                      type="text"
+                      maxLength={10}
+                      className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+                      placeholder="e.g. Hall A"
+                    />
+                    <span className="text-xs text-gray-400 float-right mt-1">{formData.venue.length}/10</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-gray-600 mb-1 font-medium">Max Participants</label>
-                      <input name="maxPart" value={formData.maxPart} onChange={handleInputChange} type="number" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" placeholder="100" />
+                      <input
+                        name="maxPart"
+                        value={formData.maxPart}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          if (val === "" || parseInt(val) <= 5000) {
+                            setFormData({ ...formData, maxPart: val });
+                          }
+                        }}
+                        onKeyDown={(e) => ["-", "e", "E", "+", "."].includes(e.key) && e.preventDefault()}
+                        type="text"
+                        inputMode="numeric"
+                        className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+                        placeholder="Max 5000"
+                      />
+                      <span className="text-xs text-gray-400 mt-1 block">Maximum allowed: 5,000</span>
                     </div>
                     <div>
-                      <label className="block text-gray-600 mb-1 font-medium">Budget</label>
-                      <input name="budget" value={formData.budget} onChange={handleInputChange} type="number" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" placeholder="$" />
+                      <label className="block text-gray-600 mb-1 font-medium">Budget (₹)</label>
+                      <input
+                        name="budget"
+                        value={formData.budget}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          if (val === "" || parseInt(val) <= 500000) {
+                            setFormData({ ...formData, budget: val });
+                          }
+                        }}
+                        onKeyDown={(e) => ["-", "e", "E", "+", "."].includes(e.key) && e.preventDefault()}
+                        type="text"
+                        inputMode="numeric"
+                        className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+                        placeholder="Max ₹5,00,000"
+                      />
+                      <span className="text-xs text-gray-400 mt-1 block">Maximum allowed: ₹5,00,000</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-gray-600 mb-1 font-medium">Coordinator Name</label>
-                      <input name="coordName" value={formData.coordName} onChange={handleInputChange} type="text" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" placeholder="John Doe" />
+                      <input
+                        name="coordName"
+                        value={formData.coordName}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^a-zA-Z ]/g, "");
+                          setFormData({ ...formData, coordName: val });
+                        }}
+                        type="text"
+                        maxLength={20}
+                        className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500"
+                        placeholder="e.g. John Doe"
+                      />
+                      <span className="text-xs text-gray-400 float-right mt-1">{formData.coordName.length}/20</span>
                     </div>
                     <div>
                       <label className="block text-gray-600 mb-1 font-medium">Coordinator Email</label>
@@ -414,7 +490,20 @@ export default function CreateProgram() {
 
               <div className="mb-8">
                 <label className="block text-gray-600 mb-1 font-medium">Description</label>
-                <textarea name="desc" value={formData.desc} onChange={handleInputChange} rows="3" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" placeholder="Program details..."></textarea>
+                <textarea
+                  name="desc"
+                  value={formData.desc}
+                  onChange={handleInputChange}
+                  rows="3"
+                  maxLength={250}
+                  className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500 resize-none"
+                  placeholder="Program details..."
+                />
+                <div className="flex justify-end mt-1">
+                  <span className={`text-xs ${formData.desc.length >= 230 ? "text-red-400" : "text-gray-400"}`}>
+                    {formData.desc.length}/250
+                  </span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

@@ -45,6 +45,8 @@ export const Userbooking = () => {
   const [step, setStep] = useState(1);
   const [agreed, setAgreed] = useState(false);
   const [successData, setSuccessData] = useState(null);
+  const [timer, setTimer] = useState(0);
+  const [redirectTimer, setRedirectTimer] = useState(10);
 
   const [toast, setToast] = useState({ show: false, message: "", type: "info" });
 
@@ -56,6 +58,28 @@ export const Userbooking = () => {
   useEffect(() => {
     fetchEvent();
   }, [id]);
+
+  useEffect(() => {
+    let interval;
+    if (timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  useEffect(() => {
+    let interval;
+    if (step === 3 && successData && redirectTimer > 0) {
+      interval = setInterval(() => {
+        setRedirectTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (redirectTimer === 0) {
+      navigate("/");
+    }
+    return () => clearInterval(interval);
+  }, [step, successData, redirectTimer, navigate]);
 
   const fetchEvent = async () => {
     try {
@@ -80,6 +104,7 @@ export const Userbooking = () => {
       setLoading(true);
       await sendOtp(form.email);
       setOtpSent(true);
+      setTimer(60);
       showToast("OTP sent to your email!", "success");
     } catch (err) {
       showToast("Failed to send OTP.", "error");
@@ -103,12 +128,17 @@ export const Userbooking = () => {
   };
 
   const handleResendOtp = async () => {
+    if (timer > 0) return;
     try {
+      setLoading(true);
       await resendOtp(form.email);
       setOtp("");
+      setTimer(60);
       showToast("OTP resent!", "success");
     } catch {
       showToast("Failed to resend.", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -157,40 +187,40 @@ export const Userbooking = () => {
     return (
       <div className="h-screen overflow-hidden bg-slate-50 flex flex-col items-center justify-center p-4 relative font-sans">
         <div className="max-w-sm w-full z-10 animate-fade-in-up">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-              <CheckCircle className="w-8 h-8 text-blue-600" />
+          <div className="text-center mb-2">
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-1 shadow-sm">
+              <CheckCircle className="w-5 h-5 text-blue-600" />
             </div>
-            <h2 className="text-3xl font-black text-slate-900 mb-1">Confirmed!</h2>
-            <p className="text-slate-500 text-sm font-medium">Your digital pass is ready</p>
+            <h2 className="text-2xl font-black text-slate-900 mb-0.5">Confirmed!</h2>
+            <p className="text-slate-500 text-[10px] font-medium uppercase tracking-widest">Your digital pass is ready</p>
           </div>
 
           <div className="relative group perspective drop-shadow-xl">
             <div className="bg-white rounded-[2rem] overflow-hidden relative border border-slate-100">
-              <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-6 text-white relative overflow-hidden">
+              <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-4 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 transform translate-x-2 -translate-y-2">
                   <Ticket className="w-24 h-24" />
                 </div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-[10px] font-bold tracking-[0.2em] uppercase bg-white/20 backdrop-blur-md px-2 py-1 rounded-full">Entry Pass</span>
+                  <span className="text-[8px] font-bold tracking-[0.2em] uppercase bg-white/20 backdrop-blur-md px-1.5 py-0.5 rounded-full">Entry Pass</span>
                 </div>
-                <h3 className="text-2xl font-black mb-1 truncate drop-shadow-sm">{successData.event_details.name}</h3>
+                <h3 className="text-xl font-black mb-0.5 truncate drop-shadow-sm">{successData.event_details.name}</h3>
                 <div className="flex items-center gap-1.5 text-xs font-medium opacity-90 text-blue-100">
                   <MapPin className="w-3 h-3" />
                   <span className="truncate">{successData.event_details.venue}</span>
                 </div>
               </div>
 
-              <div className="p-6 bg-white relative">
+              <div className="p-4 bg-white relative">
                 <div className="flex justify-center mb-6">
-                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
-                    <img src={`data:image/png;base64,${successData.qr_code}`} alt="QR Code" className="w-32 h-32 rounded-lg mix-blend-multiply" />
+                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-100 shadow-sm">
+                    <img src={`data:image/png;base64,${successData.qr_code}`} alt="QR Code" className="w-24 h-24 rounded-lg mix-blend-multiply" />
                   </div>
                 </div>
 
-                <div className="relative flex items-center justify-center my-6">
+                <div className="relative flex items-center justify-center my-4">
                   <div className="absolute w-full h-px bg-transparent border-t-2 border-dashed border-slate-200"></div>
-                  <div className="bg-white px-3 z-10 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Admit One</div>
+                  <div className="bg-white px-3 z-10 text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Admit One</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -221,8 +251,8 @@ export const Userbooking = () => {
             </div>
           </div>
 
-          <button onClick={() => navigate('/')} className="w-full mt-6 py-3 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-900 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm">
-            <ArrowLeft className="w-4 h-4 text-blue-600" /> Home
+          <button onClick={() => navigate('/')} className="w-full mt-3 py-2.5 bg-white border border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-900 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm">
+            <ArrowLeft className="w-4 h-4 text-blue-600" /> Back to Home ({redirectTimer}s)
           </button>
         </div>
       </div>
@@ -313,7 +343,23 @@ export const Userbooking = () => {
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                       <Phone className="w-3 h-3 text-blue-500" /> Phone
                     </label>
-                    <input name="phone" placeholder="Phone number" value={form.phone} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 p-3 text-sm rounded-xl text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-1 outline-none font-semibold transition-all" />
+                    <input
+  name="phone"
+  placeholder="Phone number"
+  value={form.phone}
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, ""); // remove non-numbers
+    if (value.length <= 10) {
+      handleChange({
+        target: { name: "phone", value }
+      });
+    }
+  }}
+  maxLength={10}
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className="w-full bg-slate-50 border border-slate-200 p-3 text-sm rounded-xl text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-1 outline-none font-semibold transition-all"
+/>
                   </div>
                 </div>
 
@@ -325,9 +371,13 @@ export const Userbooking = () => {
                     <div className="flex gap-2">
                       <input name="email" type="email" placeholder="email@example.com" value={form.email} onChange={handleChange} disabled={verified} className={`flex-1 bg-white border border-blue-200 p-3 text-sm rounded-xl text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-1 outline-none font-semibold transition-all ${verified ? 'opacity-60 cursor-not-allowed bg-slate-50' : ''}`} />
                       {!verified && (
-                        <button onClick={handleSendOtp} disabled={loading || !form.email} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-1.5 min-w-[100px]">
-                          {loading && !otpSent ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3 h-3" />}
-                          {otpSent ? "RESEND" : "GET OTP"}
+                        <button 
+                          onClick={otpSent ? handleResendOtp : handleSendOtp} 
+                          disabled={loading || !form.email || (otpSent && timer > 0)} 
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-3 rounded-xl text-sm transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-1.5 min-w-[120px]"
+                        >
+                          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3 h-3" />}
+                          {otpSent ? (timer > 0 ? `${timer}s` : "RESEND") : "GET OTP"}
                         </button>
                       )}
                       {verified && (
@@ -444,7 +494,7 @@ export const Userbooking = () => {
                     <CheckCircle className="w-3 h-3 text-white absolute opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                    I confirm all details are correct and I agree to the <span className="text-blue-600 hover:underline">Terms</span> and <span className="text-blue-600 hover:underline">Policies</span>.
+                    I confirm all details are correct and I agree to the Terms and condtions.
                   </p>
                 </label>
 

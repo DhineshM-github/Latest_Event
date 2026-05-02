@@ -6,6 +6,7 @@ const RoleWiseScreenMapping = () => {
   const [moduleName, setModuleName] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [pageSize, setPageSize] = useState("10");
+  const [currentPage, setCurrentPage] = useState(1);
   const [checkAll, setCheckAll] = useState(false);
   const [checkedRows, setCheckedRows] = useState([]);
 
@@ -147,7 +148,7 @@ const RoleWiseScreenMapping = () => {
               <div className="w-full overflow-x-auto">
                 <table className="w-full">
                   <thead>
-            <tr className="bg-sky-600 text-white">
+                    <tr className="bg-sky-600 text-white">
                       <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                         <input
                           type="checkbox"
@@ -181,24 +182,26 @@ const RoleWiseScreenMapping = () => {
                         </td>
                       </tr>
                     ) : (
-                      filteredRows.map((row, index) => (
-                        <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-200 group">
-                          <td className="border-b border-[#e2e8f0] px-4 py-3 text-center">
-                            <input
-                              type="checkbox"
-                              checked={checkedRows.includes(index)}
-                              onChange={() => handleRowCheck(index)}
-                              className="h-5 w-5 accent-[#4b6cb7]"
-                            />
-                          </td>
-                          <td className="border-b border-[#e2e8f0] px-4 py-3 text-[15px] text-[#4b5563]">
-                            {row.moduleName}
-                          </td>
-                          <td className="border-b border-[#e2e8f0] px-4 py-3 text-[15px] text-[#4b5563]">
-                            {row.screenName}
-                          </td>
-                        </tr>
-                      ))
+                      filteredRows
+                        .slice((currentPage - 1) * Number(pageSize), currentPage * Number(pageSize))
+                        .map((row, index) => (
+                          <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-200 group">
+                            <td className="border-b border-[#e2e8f0] px-4 py-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={checkedRows.includes((currentPage - 1) * Number(pageSize) + index)}
+                                onChange={() => handleRowCheck((currentPage - 1) * Number(pageSize) + index)}
+                                className="h-5 w-5 accent-[#4b6cb7]"
+                              />
+                            </td>
+                            <td className="border-b border-[#e2e8f0] px-4 py-3 text-[15px] text-[#4b5563]">
+                              {row.moduleName}
+                            </td>
+                            <td className="border-b border-[#e2e8f0] px-4 py-3 text-[15px] text-[#4b5563]">
+                              {row.screenName}
+                            </td>
+                          </tr>
+                        ))
                     )}
                   </tbody>
                 </table>
@@ -210,20 +213,40 @@ const RoleWiseScreenMapping = () => {
 
                 <div className="flex flex-wrap items-center justify-center gap-2 text-[16px]">
                   <span>
-                    Showing 0 to 0 of {filteredRows.length} entries
+                    Showing {filteredRows.length === 0 ? 0 : (currentPage - 1) * Number(pageSize) + 1} to{" "}
+                    {Math.min(currentPage * Number(pageSize), filteredRows.length)} of {filteredRows.length} entries
                   </span>
 
                   <div className="ml-2 flex items-center overflow-hidden rounded-md border border-[#eceff4] bg-[#f7f8fb]">
-                    <button className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483]">
+                    <button 
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
+                    >
                       <ChevronsLeft size={18} />
                     </button>
-                    <button className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483]">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
+                    >
                       <ChevronLeft size={18} />
                     </button>
-                    <button className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483]">
+                    <div className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] bg-blue-600 text-white font-bold text-sm">
+                      {currentPage}
+                    </div>
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredRows.length / Number(pageSize)), p + 1))}
+                      disabled={currentPage >= Math.ceil(filteredRows.length / Number(pageSize))}
+                      className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
+                    >
                       <ChevronRight size={18} />
                     </button>
-                    <button className="flex h-10 w-10 items-center justify-center text-[#a0a7b4] hover:bg-white hover:text-[#4d6483]">
+                    <button 
+                      onClick={() => setCurrentPage(Math.ceil(filteredRows.length / Number(pageSize)))}
+                      disabled={currentPage >= Math.ceil(filteredRows.length / Number(pageSize))}
+                      className="flex h-10 w-10 items-center justify-center text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
+                    >
                       <ChevronsRight size={18} />
                     </button>
                   </div>
@@ -232,7 +255,10 @@ const RoleWiseScreenMapping = () => {
                 <div className="relative">
                   <select
                     value={pageSize}
-                    onChange={(e) => setPageSize(e.target.value)}
+                    onChange={(e) => {
+                      setPageSize(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="h-10 min-w-[92px] appearance-none rounded-md border border-[#d9e0ea] bg-[#f8fafc] px-3 pr-10 text-[16px] text-[#6b7280] outline-none"
                   >
                     <option value="10">10</option>

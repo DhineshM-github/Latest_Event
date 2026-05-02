@@ -1512,8 +1512,7 @@ def get_home_events():
             ON e.id = f.event_id AND f.file_type = 'banner'
         LEFT JOIN event_booking_details b
             ON e.id = b.event_id
-        WHERE e.status = 'APPROVED' AND e.end_date >= CURDATE()
-        ORDER BY e.start_date ASC
+        WHERE e.status = 'APPROVED' 
         """
         #WHERE e.status = 'APPROVED' AND e.start_date >= CURDATE()
 

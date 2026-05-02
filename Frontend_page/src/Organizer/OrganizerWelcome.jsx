@@ -12,12 +12,14 @@ import {
   TrendingUp,
   Users
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getEventshow } from "../Services/api";
 
 export const OrganizerWelcome = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [events, setEvents] = useState([]);
+  const [showToast, setShowToast] = useState(false);
 
   const Redexorganizer = useSelector((state) => state.user);
   const storedUser = {
@@ -30,7 +32,19 @@ export const OrganizerWelcome = () => {
     if (organizer?.id) {
       fetchEvents();
     }
-  }, [organizer?.id]);
+    
+    // Check if redirected from login
+    if (location.state?.fromLogin) {
+      setShowToast(true);
+      // Clear the state so it doesn't show again on refresh
+      window.history.replaceState({}, document.title);
+      
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [organizer?.id, location.state]);
 
   const fetchEvents = async () => {
     if (!organizer?.id) return;
@@ -170,6 +184,15 @@ export const OrganizerWelcome = () => {
           </div>
         </div>
       </div>
+      {/* TOAST NOTIFICATION */}
+      {showToast && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-10 duration-500 flex items-center gap-4 border bg-emerald-600 text-white border-emerald-500 shadow-emerald-200">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+            ✓
+          </div>
+          <p className="font-bold text-sm tracking-wide">Logged in successfully!</p>
+        </div>
+      )}
     </div>
   );
 };

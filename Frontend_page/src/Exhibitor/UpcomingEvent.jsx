@@ -99,13 +99,22 @@ const ExhibitorHome = () => {
       {/* Header & Controls Section */}
       <div className="max-w-7xl mx-auto mb-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-            Welcome,{" "}
-            <span className="bg-gradient-to-r from-orange-400 to-rose-500 bg-clip-text text-transparent">
-              {displayUser.name || "Exhibitor"}
-            </span>{" "}
-            👋
-          </h1>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-orange-500/50 hover:text-orange-500 transition-all group"
+              title="Go Back"
+            >
+              <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+            </button>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+              Welcome,{" "}
+              <span className="bg-gradient-to-r from-orange-400 to-rose-500 bg-clip-text text-transparent">
+                {displayUser.name || "Exhibitor"}
+              </span>{" "}
+              👋
+            </h1>
+          </div>
 
           <div className="relative">
             <button
@@ -277,7 +286,7 @@ const ExhibitorHome = () => {
                       viewMode === "list"
                         ? "px-8 py-3 bg-gradient-to-r from-orange-500 to-rose-500 hover:shadow-[0_10px_20px_rgba(249,115,22,0.3)] active:scale-95 w-auto"
                         : viewMode === "compact"
-                          ? "mt-4 py-2 text-xs bg-slate-800 hover:bg-orange-500 w-full"
+                          ? "mt-4 py-2 text-xs bg-gradient-to-r from-orange-500 to-rose-500 hover:shadow-[0_10px_20px_rgba(249,115,22,0.3)] active:scale-95 w-full"
                           : "mt-4 py-3 bg-gradient-to-r from-orange-500 to-rose-500 hover:shadow-[0_10px_20px_rgba(249,115,22,0.3)] active:scale-95 w-full"
                     }`}
                   >

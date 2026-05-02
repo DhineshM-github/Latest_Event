@@ -186,6 +186,9 @@ const MyProfile = () => {
         setMessage({ type: "success", text: "Profile updated successfully!" });
         
         // 🔥 Instant sync with Redux & Header
+        sessionStorage.setItem("name", formData.name);
+        sessionStorage.setItem("profile_image", formData.profile_image);
+
         dispatch(setUser({
           id: formData.id,
           name: formData.name,

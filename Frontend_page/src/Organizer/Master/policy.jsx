@@ -120,12 +120,12 @@ export const PolicyPage = () => {
         organizer_id: Redexorganizer?.id, // important
       };
       await createPolicy(payload);
-      showToast("Policy added successfully");
+      showToast("Policy added successfully", "success");
       resetForm();
       setShowForm(false);
       loadPolicies();
     } catch (error) {
-      showToast("Failed to add policy");
+      showToast("Failed to add policy", "error");
     } finally {
       setLoading(false);
     }
@@ -171,15 +171,17 @@ export const PolicyPage = () => {
   return (
     <div className="px-6 py-4 sm:p-10 min-h-screen bg-sky-50">
       {/* TOAST */}
+      {/* TOAST NOTIFICATION */}
       {popup.show && (
-        <div
-          className={`fixed top-5 right-5 px-4 py-3 rounded-lg shadow-lg text-white text-sm transition-all duration-300
-      ${popup.type === "success"
-              ? "bg-green-500"
-              : "bg-red-500"
-            }`}
-        >
-          {popup.message}
+        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${
+          popup.type === "success" 
+            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200" 
+            : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
+        }`}>
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+            {popup.type === "success" ? "✓" : "!"}
+          </div>
+          <p className="font-bold text-sm tracking-wide">{popup.message}</p>
         </div>
       )}
 
@@ -355,19 +357,18 @@ export const PolicyPage = () => {
                     Policy Name <span className="text-red-500">*</span>
                   </label>
                   <input
-                    name="policy_name"
-                    value={form.policy_name}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (/^[A-Za-z\s]*$/.test(value)) handleChange(e);
-                    }}
-                    className={`w-full p-4 border-2 rounded-2xl focus:ring-4 transition-all outline-none ${fieldErrors.policy_name
-                      ? "border-red-200 bg-red-50 focus:ring-red-100 focus:border-red-400"
-                      : "border-slate-100 bg-slate-50 focus:ring-blue-50 focus:border-blue-500"
-                      }`}
-                    placeholder="e.g. Early Bird Policy"
-                    required
-                  />
+  name="policy_name"
+  value={form.policy_name}
+  onChange={handleChange}
+  maxLength={20}
+  className={`w-full p-4 border-2 rounded-2xl focus:ring-4 transition-all outline-none ${
+    fieldErrors.policy_name
+      ? "border-red-200 bg-red-50 focus:ring-red-100 focus:border-red-400"
+      : "border-slate-100 bg-slate-50 focus:ring-blue-50 focus:border-blue-500"
+  }`}
+  placeholder="e.g. Early Bird Policy"
+  required
+/>
                   {fieldErrors.policy_name && (
                     <p className="text-red-500 text-xs font-bold ml-1">
                       {fieldErrors.policy_name}

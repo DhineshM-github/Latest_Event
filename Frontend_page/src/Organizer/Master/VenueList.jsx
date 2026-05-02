@@ -42,6 +42,14 @@ export const Venuepage = () => {
 
   const [showStateDropdown, setShowStateDropdown] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showNotification = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 3000);
+  };
 
   const [searchTerm, setSearchTerm] = useState("");
   const countryRef = useRef(null);
@@ -228,11 +236,13 @@ export const Venuepage = () => {
         ),
       });
 
+      showNotification("Venue created successfully!", "success");
       setShowForm(false);
       resetForm();
       loadVenues();
     } catch (error) {
       console.error("Failed to create venue:", error);
+      showNotification("Failed to create venue", "error");
     }
   };
 
@@ -252,10 +262,12 @@ export const Venuepage = () => {
     if (!deleteConfirm.id) return;
     try {
       await deleteVenue(deleteConfirm.id);
+      showNotification("Venue deleted successfully!", "success");
       setDeleteConfirm({ show: false, id: null });
       loadVenues();
     } catch (error) {
       console.error("Failed to delete venue:", error);
+      showNotification("Failed to delete venue", "error");
     }
   };
 
@@ -911,6 +923,35 @@ export const Venuepage = () => {
           </div>
         </div>
       )}
+      {toast.show && (
+        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${
+          toast.type === "success" 
+            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200" 
+            : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
+        }`}>
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <p className="font-bold text-sm tracking-wide">{toast.message}</p>
+        </div>
+      )}
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
     </div>
   );
 };

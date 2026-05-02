@@ -14,6 +14,7 @@ import {
   Sparkles,
   TrendingUp,
   Zap,
+  ArrowUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MediaRenderer from "../components/MediaRenderer";
@@ -578,7 +579,7 @@ const Footer = () => {
               <li>
                 <button
                   onClick={() => navigate("/Help_Center")}
-                  className="text-slate-400 hover:text-white transition-colors text-sm"
+                  className="text-slate-400 hover:text-white transition-colors text-sm cursor-pointer"
                 >
                   Help Center
                 </button>
@@ -587,7 +588,7 @@ const Footer = () => {
               <li>
                 <button
                   onClick={() => navigate("/Terms")}
-                  className="text-slate-400 hover:text-white transition-colors text-sm"
+                  className="text-slate-400 hover:text-white transition-colors text-sm cursor-pointer"
                 >
                   Terms of Service
                 </button>
@@ -595,7 +596,7 @@ const Footer = () => {
               <li>
                 <button
                   onClick={() => navigate("/Cancellation")}
-                  className="text-slate-400 hover:text-white transition-colors text-sm"
+                  className="text-slate-400 hover:text-white transition-colors text-sm cursor-pointer"
                 >
                   Cancellation and Refund Policy
                 </button>
@@ -644,7 +645,7 @@ const Footer = () => {
 
         <div className="pt-8 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-slate-500 text-xs">
-            © {new Date().getFullYear()} EventVibe. All rights reserved.
+            © {new Date().getFullYear()} BookMyEvent. All rights reserved.
           </p>
 
         </div>
@@ -658,6 +659,27 @@ const App = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [events, setEvents] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     fetchEvents();
@@ -720,6 +742,19 @@ const App = () => {
       />
 
       <Footer />
+
+      {/* Return to Top Button */}
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-28 right-7 z-[100] p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-2xl transition-all duration-500 transform hover:scale-110 active:scale-95 group ${showScrollTop
+          ? "translate-y-0 opacity-100 visible"
+          : "translate-y-20 opacity-0 invisible"
+          }`}
+        aria-label="Return to top"
+      >
+        <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform" />
+        <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity" />
+      </button>
     </div>
   );
 };

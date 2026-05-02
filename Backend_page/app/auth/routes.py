@@ -69,7 +69,7 @@ def login():
         cursor = db.cursor()
 
         cursor.execute(
-            "SELECT id, name, email, password, role FROM users WHERE email=%s",
+            "SELECT id, name, email, password, role, profile_image FROM users WHERE email=%s",
             (email,)
         )
 
@@ -79,7 +79,7 @@ def login():
         if user is None:
             return jsonify({"message": "Email Id is not registered"}), 401
 
-        user_id, name, email_db, hashed_password, role = user
+        user_id, name, email_db, hashed_password, role, profile_image = user
 
         if not check_password_hash(hashed_password, password):
             return jsonify({"message": "Invalid password"}), 401
@@ -99,7 +99,8 @@ def login():
             "name": name,
             "email": email_db,
             "role": role,
-            "User_id":user_id
+            "User_id": user_id,
+            "profile_image": profile_image
         }), 200
 
     except Exception as e:

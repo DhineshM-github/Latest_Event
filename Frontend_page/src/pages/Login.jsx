@@ -100,9 +100,9 @@ export default function Login() {
 
       sessionStorage.setItem("token", data.token);
       sessionStorage.setItem("role", data.role);
-      console.log("User ID:", data.role);
       sessionStorage.setItem("id", data.User_id);
       sessionStorage.setItem("name", data.name);
+      sessionStorage.setItem("profile_image", data.profile_image || "");
 
       dispatch(
         setUser({
@@ -110,15 +110,16 @@ export default function Login() {
           name: data.name,
           role: data.role,
           email: data.email,
+          profile_image: data.profile_image
         }),
       );
 
       if (data.role === "organizer") {
-        navigate("/OrganizerHome");
+        navigate("/OrganizerHome", { state: { fromLogin: true } });
       } else if (data.role === "exhibitor") {
-        navigate("/exhibitor/dashboard");
+        navigate("/exhibitor/dashboard", { state: { fromLogin: true } });
       } else if (data.role === "superuser") {
-        navigate("/superuser/dashboard");
+        navigate("/superuser/dashboard", { state: { fromLogin: true } });
       }
     } catch (err) {
       if (err.response) {

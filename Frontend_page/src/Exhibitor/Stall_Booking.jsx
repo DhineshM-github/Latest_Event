@@ -163,7 +163,7 @@ const Stall = () => {
     setLoading(true);
 
     const newErrors = {};
-    const requiredFields = ['firstName', 'lastName', 'mobile', 'companyName', 'country', 'state', 'city', 'address'];
+    const requiredFields = ['firstName', 'lastName', 'email', 'mobile', 'companyName', 'country', 'state', 'city', 'address', 'stallArea', 'products', 'pinCode'];
     
     requiredFields.forEach(field => {
       if (!formData[field] || (typeof formData[field] === 'string' && formData[field].trim() === "")) {
@@ -398,6 +398,7 @@ const Stall = () => {
                       onChange={(e) => {
                         setCountrySearch(e.target.value);
                         setShowCountryDropdown(true);
+                        setErrors(prev => ({ ...prev, country: "" }));
                       }}
                       onFocus={() => setShowCountryDropdown(true)}
                       className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${
@@ -419,6 +420,7 @@ const Stall = () => {
                                 setStateSearch("");
                                 setCitySearch("");
                                 setShowCountryDropdown(false);
+                                setErrors(prev => ({ ...prev, country: "", state: "", city: "" }));
                                 loadStates(c.id);
                               }}
                               className="p-2 cursor-pointer hover:bg-blue-50 text-sm"
@@ -445,6 +447,7 @@ const Stall = () => {
                       onChange={(e) => {
                         setStateSearch(e.target.value);
                         setShowStateDropdown(true);
+                        setErrors(prev => ({ ...prev, state: "" }));
                       }}
                       onFocus={() => setShowStateDropdown(true)}
                       className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${
@@ -465,6 +468,7 @@ const Stall = () => {
                                 setStateSearch(s.state_name);
                                 setCitySearch("");
                                 setShowStateDropdown(false);
+                                setErrors(prev => ({ ...prev, state: "", city: "" }));
                                 loadCities(s.id);
                               }}
                               className="p-2 cursor-pointer hover:bg-blue-50 text-sm"
@@ -493,6 +497,7 @@ const Stall = () => {
                       onChange={(e) => {
                         setCitySearch(e.target.value);
                         setShowCityDropdown(true);
+                        setErrors(prev => ({ ...prev, city: "" }));
                       }}
                       onFocus={() => setShowCityDropdown(true)}
                       className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${
@@ -512,6 +517,7 @@ const Stall = () => {
                                 setFormData({ ...formData, city: c.city_name });
                                 setCitySearch(c.city_name);
                                 setShowCityDropdown(false);
+                                setErrors(prev => ({ ...prev, city: "" }));
                               }}
                               className="p-2 cursor-pointer hover:bg-blue-50 text-sm"
                             >
@@ -550,7 +556,7 @@ const Stall = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Address *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Address <span className="text-red-500">*</span></label>
                     <textarea
                       name="address"
                       value={formData.address}

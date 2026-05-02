@@ -1,17 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getMyBookings, getBookingById, updateBooking } from "../Services/api";
+import { getMyBookings, getBookingById, updateBooking, getCountries, getStates, getCities } from "../Services/api";
 
 const MyBookings = () => {
   const navigate = useNavigate();
-  
+
   const [bookings, setBookings] = useState([]);
   const [selectedData, setSelectedData] = useState(null);
   const [modalType, setModalType] = useState("");
   const [form, setForm] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  // Country, State, City search states
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [stateSearch, setStateSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+  const countryRef = useRef(null);
+  const stateRef = useRef(null);
+  const cityRef = useRef(null);
+
+  const showNotification = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 3000);
+  };
 
   const reduxUser = useSelector((state) => state.user);
 
@@ -23,10 +47,66 @@ const MyBookings = () => {
   const user = reduxUser?.id ? reduxUser : storedUser;
 
   useEffect(() => {
-  if (user?.id) {
-    fetchBookings();
-  }
-}, [user?.id]);
+    if (user?.id) {
+      fetchBookings();
+    }
+  }, [user?.id]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (modalType) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [modalType]);
+
+  // Click away listener for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (countryRef.current && !countryRef.current.contains(event.target)) {
+        setShowCountryDropdown(false);
+      }
+      if (stateRef.current && !stateRef.current.contains(event.target)) {
+        setShowStateDropdown(false);
+      }
+      if (cityRef.current && !cityRef.current.contains(event.target)) {
+        setShowCityDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const loadCountries = async () => {
+    try {
+      const data = await getCountries();
+      setCountries(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadStates = async (countryId) => {
+    try {
+      const data = await getStates(countryId);
+      setStates(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadCities = async (stateId) => {
+    try {
+      const data = await getCities(stateId);
+      setCities(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -63,6 +143,37 @@ const MyBookings = () => {
       if (res.success) {
         setForm(res.data);
         setModalType("edit");
+
+        // Initialize search fields
+        setCountrySearch(res.data.country || "");
+        setStateSearch(res.data.state || "");
+        setCitySearch(res.data.city || "");
+
+        // Load all countries first
+        const countriesList = await getCountries();
+        setCountries(countriesList);
+
+        // Find Country ID by name to load States
+        if (res.data.country) {
+          const matchedCountry = countriesList.find(
+            (c) => c.country_name.toLowerCase() === res.data.country.toLowerCase()
+          );
+          if (matchedCountry) {
+            const statesList = await getStates(matchedCountry.id);
+            setStates(statesList);
+
+            // Find State ID by name to load Cities
+            if (res.data.state) {
+              const matchedState = statesList.find(
+                (s) => s.state_name.toLowerCase() === res.data.state.toLowerCase()
+              );
+              if (matchedState) {
+                const citiesList = await getCities(matchedState.id);
+                setCities(citiesList);
+              }
+            }
+          }
+        }
       }
     } catch (err) {
       setError("Failed to load booking for editing");
@@ -74,26 +185,98 @@ const MyBookings = () => {
     setSelectedData(null);
     setForm({});
     setError("");
+    setFieldErrors({});
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    // 1. Spacing Restriction
+    if (typeof value === "string") {
+      if (name === "email" || name === "mobile" || name === "pin_code") {
+        value = value.replace(/\s/g, ""); // No spaces allowed at all
+      } else {
+        value = value.trimStart(); // No leading spaces allowed
+      }
+    }
+
+    // 2. Number field restriction (Contact Number / PinCode)
+    if (name === "mobile") {
+      if (value !== "" && !/^\d*$/.test(value)) return;
+      if (value.length > 10) return;
+    }
+    if (name === "pin_code") {
+      if (value !== "" && !/^\d*$/.test(value)) return;
+      if (value.length > 6) return;
+    }
+
+    // 3. Alphabet restriction for specific text fields
+    if (["first_name", "last_name", "city", "state", "country"].includes(name)) {
+      if (value !== "" && !/^[a-zA-Z\s]*$/.test(value)) {
+        return; // Disallow numbers/special characters
+      }
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = [
+      "first_name",
+      "last_name",
+      "email",
+      "mobile",
+      "company_name",
+      "country",
+      "state",
+      "city",
+      "address",
+      "stall_area",
+      "products",
+      "pin_code",
+    ];
+
+    requiredFields.forEach((field) => {
+      if (
+        !form[field] ||
+        (typeof form[field] === "string" && form[field].trim() === "")
+      ) {
+        newErrors[field] = "This field is required";
+      }
+    });
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (form.email && !emailRegex.test(form.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (form.mobile && !/^\d{10}$/.test(form.mobile)) {
+      newErrors.mobile = "Mobile number must be 10 digits";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleUpdate = async () => {
+    if (!validateForm()) return;
+
     try {
       setError("");
       const res = await updateBooking(form.id, form);
       if (res.success) {
-        setError("");
+        showNotification("Booking updated successfully!", "success");
         closeModal();
         fetchBookings();
       } else {
         setError("Failed to update booking");
+        showNotification("Failed to update booking", "error");
       }
     } catch (err) {
       setError("An error occurred while updating");
+      showNotification("An error occurred while updating", "error");
     }
   };
 
@@ -110,7 +293,7 @@ const MyBookings = () => {
               <p className="text-slate-500 mt-1 text-sm font-medium">
                 Manage and view your event stall bookings
               </p>
-              <button 
+              <button
                 onClick={() => navigate("/exhibitor/dashboard")}
                 className="mt-4 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm transition-all hover:-translate-x-1"
               >
@@ -179,13 +362,12 @@ const MyBookings = () => {
                 {/* STATUS BADGE */}
                 <div className="absolute top-4 right-4">
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                      item.status === "confirmed"
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${item.status === "confirmed"
                         ? "bg-green-100 text-green-700"
                         : item.status === "pending"
                           ? "bg-yellow-100 text-yellow-700"
                           : "bg-slate-100 text-slate-700"
-                    }`}
+                      }`}
                   >
                     {item.status?.charAt(0).toUpperCase() +
                       item.status?.slice(1) || "Pending"}
@@ -256,11 +438,10 @@ const MyBookings = () => {
                       item.status === "approved" || item.status === "confirmed"
                     }
                     className={`flex-1 py-2 rounded-lg font-semibold text-sm transition-all duration-200
-    ${
-      item.status === "approved" || item.status === "confirmed"
-        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-        : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 hover:shadow-md active:scale-95"
-    }
+    ${item.status === "approved" || item.status === "confirmed"
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 hover:shadow-md active:scale-95"
+                      }
   `}
                   >
                     Edit
@@ -279,11 +460,11 @@ const MyBookings = () => {
           onClick={closeModal}
         >
           <div
-            className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200"
+            className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* MODAL HEADER */}
-            <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 px-8 py-6 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 px-8 py-6 flex items-center justify-between shrink-0">
               <h2 className="text-2xl font-bold text-slate-900">
                 {modalType === "view" ? "Booking Details" : "Edit Booking"}
               </h2>
@@ -295,7 +476,7 @@ const MyBookings = () => {
               </button>
             </div>
 
-            <div className="px-8 py-6">
+            <div className="overflow-y-auto flex-1 custom-scrollbar p-8">
               {/* ERROR IN MODAL */}
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -450,15 +631,15 @@ const MyBookings = () => {
                         Visiting Card
                       </label>
                       <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-50 transition-all hover:shadow-lg">
-                        <img 
-                          src={selectedData.visiting_card_url} 
+                        <img
+                          src={selectedData.visiting_card_url}
                           alt="Visiting Card"
                           className="w-full h-auto object-contain max-h-[300px] mx-auto"
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                          <a 
-                            href={selectedData.visiting_card_url} 
-                            target="_blank" 
+                          <a
+                            href={selectedData.visiting_card_url}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="w-full block text-center py-2 bg-white/90 text-slate-900 rounded-lg font-bold text-sm backdrop-blur hover:bg-white transition-colors"
                           >
@@ -478,7 +659,7 @@ const MyBookings = () => {
                     {/* NAME FIELDS */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           First Name
                         </label>
                         <input
@@ -487,11 +668,13 @@ const MyBookings = () => {
                           value={form.first_name || ""}
                           onChange={handleChange}
                           placeholder="First Name"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.first_name ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.first_name && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.first_name}</p>}
                       </div>
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Last Name
                         </label>
                         <input
@@ -500,15 +683,17 @@ const MyBookings = () => {
                           value={form.last_name || ""}
                           onChange={handleChange}
                           placeholder="Last Name"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.last_name ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.last_name && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.last_name}</p>}
                       </div>
                     </div>
 
                     {/* CONTACT FIELDS */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Email
                         </label>
                         <input
@@ -517,11 +702,13 @@ const MyBookings = () => {
                           value={form.email || ""}
                           onChange={handleChange}
                           placeholder="Email"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.email ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.email && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.email}</p>}
                       </div>
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Mobile
                         </label>
                         <input
@@ -530,15 +717,18 @@ const MyBookings = () => {
                           value={form.mobile || ""}
                           onChange={handleChange}
                           placeholder="Mobile"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          maxLength="10"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.mobile ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.mobile && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.mobile}</p>}
                       </div>
                     </div>
 
                     {/* COMPANY FIELDS */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Company
                         </label>
                         <input
@@ -547,11 +737,13 @@ const MyBookings = () => {
                           value={form.company_name || ""}
                           onChange={handleChange}
                           placeholder="Company Name"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.company_name ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.company_name && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.company_name}</p>}
                       </div>
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Designation
                         </label>
                         <input
@@ -567,51 +759,160 @@ const MyBookings = () => {
 
                     {/* LOCATION FIELDS */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                      <div className="relative" ref={countryRef}>
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Country
                         </label>
                         <input
                           type="text"
-                          name="country"
-                          value={form.country || ""}
-                          onChange={handleChange}
-                          placeholder="Country"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          placeholder="Search Country"
+                          value={countrySearch}
+                          onChange={(e) => {
+                            setCountrySearch(e.target.value);
+                            setShowCountryDropdown(true);
+                            setFieldErrors(prev => ({ ...prev, country: "" }));
+                          }}
+                          onFocus={() => setShowCountryDropdown(true)}
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.country ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {showCountryDropdown && (
+                          <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                            {countries
+                              .filter((c) =>
+                                c.country_name.toLowerCase().includes(countrySearch.toLowerCase())
+                              )
+                              .map((c) => (
+                                <div
+                                  key={c.id}
+                                  onClick={() => {
+                                    setForm({ ...form, country: c.country_name, state: "", city: "" });
+                                    setCountrySearch(c.country_name);
+                                    setStateSearch("");
+                                    setCitySearch("");
+                                    setShowCountryDropdown(false);
+                                    setFieldErrors(prev => ({ ...prev, country: "", state: "", city: "" }));
+                                    loadStates(c.id);
+                                  }}
+                                  className="p-2 cursor-pointer hover:bg-blue-50 text-sm text-slate-700"
+                                >
+                                  {c.country_name}
+                                </div>
+                              ))}
+                            {countries.filter((c) =>
+                              c.country_name.toLowerCase().includes(countrySearch.toLowerCase())
+                            ).length === 0 && (
+                                <div className="p-2 text-slate-400 text-sm">No results found</div>
+                              )}
+                          </div>
+                        )}
+                        {fieldErrors.country && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.country}</p>}
                       </div>
-                      <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+
+                      <div className="relative" ref={stateRef}>
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           State
                         </label>
                         <input
                           type="text"
-                          name="state"
-                          value={form.state || ""}
-                          onChange={handleChange}
-                          placeholder="State"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          placeholder="Search State"
+                          value={stateSearch}
+                          onChange={(e) => {
+                            setStateSearch(e.target.value);
+                            setShowStateDropdown(true);
+                            setFieldErrors(prev => ({ ...prev, state: "" }));
+                          }}
+                          onFocus={() => setShowStateDropdown(true)}
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.state ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {showStateDropdown && (
+                          <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                            {states
+                              .filter((s) =>
+                                s.state_name.toLowerCase().includes(stateSearch.toLowerCase())
+                              )
+                              .map((s) => (
+                                <div
+                                  key={s.id}
+                                  onClick={() => {
+                                    setForm({ ...form, state: s.state_name, city: "" });
+                                    setStateSearch(s.state_name);
+                                    setCitySearch("");
+                                    setShowStateDropdown(false);
+                                    setFieldErrors(prev => ({ ...prev, state: "", city: "" }));
+                                    loadCities(s.id);
+                                  }}
+                                  className="p-2 cursor-pointer hover:bg-blue-50 text-sm text-slate-700"
+                                >
+                                  {s.state_name}
+                                </div>
+                              ))}
+                            {states.filter((s) =>
+                              s.state_name.toLowerCase().includes(stateSearch.toLowerCase())
+                            ).length === 0 && (
+                                <div className="p-2 text-slate-400 text-sm italic">
+                                  {!form.country ? "Please select a country first" : "No results found"}
+                                </div>
+                              )}
+                          </div>
+                        )}
+                        {fieldErrors.state && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.state}</p>}
                       </div>
                     </div>
 
                     {/* CITY & PINCODE */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                      <div className="relative" ref={cityRef}>
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           City
                         </label>
                         <input
                           type="text"
-                          name="city"
-                          value={form.city || ""}
-                          onChange={handleChange}
-                          placeholder="City"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          placeholder="Search City"
+                          value={citySearch}
+                          onChange={(e) => {
+                            setCitySearch(e.target.value);
+                            setShowCityDropdown(true);
+                            setFieldErrors(prev => ({ ...prev, city: "" }));
+                          }}
+                          onFocus={() => setShowCityDropdown(true)}
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.city ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {showCityDropdown && (
+                          <div className="absolute z-50 w-full bg-white border border-slate-200 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
+                            {cities
+                              .filter((c) =>
+                                c.city_name.toLowerCase().includes(citySearch.toLowerCase())
+                              )
+                              .map((c) => (
+                                <div
+                                  key={c.id}
+                                  onClick={() => {
+                                    setForm({ ...form, city: c.city_name });
+                                    setCitySearch(c.city_name);
+                                    setShowCityDropdown(false);
+                                    setFieldErrors(prev => ({ ...prev, city: "" }));
+                                  }}
+                                  className="p-2 cursor-pointer hover:bg-blue-50 text-sm text-slate-700"
+                                >
+                                  {c.city_name}
+                                </div>
+                              ))}
+                            {cities.filter((c) =>
+                              c.city_name.toLowerCase().includes(citySearch.toLowerCase())
+                            ).length === 0 && (
+                                <div className="p-2 text-slate-400 text-sm italic">
+                                  {!form.state ? "Please select a state first" : "No results found"}
+                                </div>
+                              )}
+                          </div>
+                        )}
+                        {fieldErrors.city && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.city}</p>}
                       </div>
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Pincode
                         </label>
                         <input
@@ -620,15 +921,18 @@ const MyBookings = () => {
                           value={form.pin_code || ""}
                           onChange={handleChange}
                           placeholder="Pincode"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          maxLength="6"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.pin_code ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.pin_code && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.pin_code}</p>}
                       </div>
                     </div>
 
                     {/* STALL & PRODUCTS */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Stall Area
                         </label>
                         <input
@@ -637,11 +941,13 @@ const MyBookings = () => {
                           value={form.stall_area || ""}
                           onChange={handleChange}
                           placeholder="Stall Area"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.stall_area ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.stall_area && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.stall_area}</p>}
                       </div>
                       <div>
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                        <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                           Products
                         </label>
                         <input
@@ -650,14 +956,16 @@ const MyBookings = () => {
                           value={form.products || ""}
                           onChange={handleChange}
                           placeholder="Products"
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium"
+                          className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium ${fieldErrors.products ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                            }`}
                         />
+                        {fieldErrors.products && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.products}</p>}
                       </div>
                     </div>
 
                     {/* TEXTAREA FIELDS */}
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                      <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                         Address
                       </label>
                       <textarea
@@ -666,12 +974,14 @@ const MyBookings = () => {
                         onChange={handleChange}
                         placeholder="Full Address"
                         rows="3"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-colors duration-200 font-medium resize-none"
+                        className={`w-full px-4 py-3 bg-slate-50 border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors duration-200 font-medium resize-none ${fieldErrors.address ? "border-red-500 focus:ring-red-100" : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                          }`}
                       />
+                      {fieldErrors.address && <p className="text-red-500 text-[10px] mt-1 font-semibold">{fieldErrors.address}</p>}
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-2 block">
+                      <label className="text-xs font-bold  tracking-wide text-slate-600 mb-2 block">
                         Additional Messages
                       </label>
                       <textarea
@@ -687,11 +997,11 @@ const MyBookings = () => {
                     {/* CURRENT VISITING CARD PREVIEW (In Edit Modal) */}
                     {form.visiting_card_url && (
                       <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <label className="text-xs font-bold uppercase tracking-wide text-slate-500 block mb-2">
+                        <label className="text-xs font-bold  tracking-wide text-slate-500 block mb-2">
                           Current Visiting Card
                         </label>
-                        <img 
-                          src={form.visiting_card_url} 
+                        <img
+                          src={form.visiting_card_url}
                           alt="Current Card"
                           className="h-32 w-auto rounded border border-slate-300 object-contain shadow-sm"
                         />
@@ -721,6 +1031,34 @@ const MyBookings = () => {
           </div>
         </div>
       )}
+      {/* TOAST NOTIFICATION */}
+      {toast.show && (
+        <div className={`fixed top-10 right-10 z-[200] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${toast.type === "success"
+            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200"
+            : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
+          }`}>
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <p className="font-bold text-sm tracking-wide">{toast.message}</p>
+        </div>
+      )}
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
     </div>
   );
 };
