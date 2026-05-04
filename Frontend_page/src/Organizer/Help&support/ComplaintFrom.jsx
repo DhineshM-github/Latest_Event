@@ -11,6 +11,7 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ChevronsLeft,
   ChevronsRight
 } from "lucide-react";
@@ -212,6 +213,18 @@ export default function ComplaintPage() {
     });
   };
 
+  const filteredComplaints = complaints.filter(c =>
+    c.complaint_code.toLowerCase().includes(search.toLowerCase()) ||
+    c.event_name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredComplaints.length / itemsPerPage);
+  const currentComplaints = filteredComplaints.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   if (showForm) {
     return (
       <div className="min-h-screen bg-[#fafafa] p-8 font-sans">
@@ -322,18 +335,6 @@ export default function ComplaintPage() {
       </div>
     );
   }
-
-  const filteredComplaints = complaints.filter(c =>
-    c.complaint_code.toLowerCase().includes(search.toLowerCase()) ||
-    c.event_name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredComplaints.length / itemsPerPage);
-  const currentComplaints = filteredComplaints.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
 
   return (
     <div className="min-h-screen bg-[#fafafa] p-8 font-sans">
