@@ -4,13 +4,15 @@ import {
   getapprovalBookingById,
   updateBookingStatus,
 } from "../../Services/api";
-import { ChevronDown, X, Eye } from "lucide-react";
+import { ChevronDown, X, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
 const AdminApproval = () => {
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchBookings();
@@ -89,6 +91,16 @@ const AdminApproval = () => {
     (b.company_name || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBookings = filteredBookings.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
       <div className="flex justify-between items-center mb-6">
@@ -128,30 +140,48 @@ const AdminApproval = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-sky-600 text-white">
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">
+                      Actions
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                       First Name
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
+                      Mobile Number
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                       Event Name
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                       Company
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">
                       Status
-                    </th>
-                    <th className="px-8 py-4 text-right text-xs font-bold text-white uppercase tracking-wider">
-                      Actions
                     </th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-slate-50">
-                  {filteredBookings.map((booking) => (
+                  {currentBookings.map((booking) => (
                     <tr key={booking.id} className="hover:bg-sky-50/50 transition-colors duration-200 group">
+                      <td className="px-4 py-4 text-center">
+                        <button
+                          onClick={() => handleView(booking.id)}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+                        >
+                          <Eye size={16} />
+                          View
+                        </button>
+                      </td>
                       <td className="px-6 py-4">
                         <div className="font-medium text-slate-900">
                           {booking.first_name}
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-900">
+                          {booking.mobile}
                         </div>
                       </td>
 
@@ -189,15 +219,7 @@ const AdminApproval = () => {
                         </select>
                       </td>
 
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => handleView(booking.id)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
-                        >
-                          <Eye size={16} />
-                          View
-                        </button>
-                      </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -206,6 +228,43 @@ const AdminApproval = () => {
           </div>
         )}
       </div>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div className="flex gap-2">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                  currentPage === i + 1 
+                    ? "bg-sky-600 text-white shadow-lg shadow-sky-200" 
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
 
       {/* Modal Overlay */}
       {selectedBooking && (

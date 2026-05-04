@@ -308,13 +308,24 @@ export const VendorPage = () => {
     }
   };
 
-  // ================= SEARCH =================
+  // ================= SEARCH & PAGINATION =================
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filteredVendors = vendors.filter(
     (v) =>
       (v.vendor_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (v.company_name || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  const totalPages = Math.ceil(filteredVendors.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentVendors = filteredVendors.slice(indexOfFirstItem, indexOfLastItem);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="p-10 text-slate-800 bg-sky-50 min-h-screen w-full">
@@ -387,8 +398,8 @@ export const VendorPage = () => {
           </thead>
 
           <tbody className="divide-y divide-slate-50">
-            {filteredVendors.length > 0 ? (
-              filteredVendors.map((v) => (
+            {currentVendors.length > 0 ? (
+              currentVendors.map((v) => (
                 <tr key={v.id} className="hover:bg-sky-50/50 transition-colors duration-200 group">
                   <td className="px-6 py-4 flex gap-3">
                     <button
@@ -440,6 +451,45 @@ export const VendorPage = () => {
           </tbody>
         </table>
       </div>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <p className="text-gray-500 text-sm">
+            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredVendors.length)} of {filteredVendors.length} entries
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-sky-50 disabled:opacity-40 transition-all font-semibold text-sky-600"
+            >
+              Previous
+            </button>
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-10 h-10 rounded-lg font-bold transition-all ${
+                  currentPage === i + 1 
+                    ? "bg-sky-600 text-white shadow-lg" 
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-sky-50 disabled:opacity-40 transition-all font-semibold text-sky-600"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ================= CREATE MODAL ================= */}
 
@@ -676,6 +726,7 @@ export const VendorPage = () => {
                       <input
                         name="account_number"
                         value={form.account_number}
+                        maxLength={20}
                         placeholder="Enter Account Number"
                         onChange={handleChange}
                         className={`w-full border p-2 rounded bg-white focus:ring-2 focus:ring-sky-500 outline-none ${fieldErrors.account_number ? "border-red-500" : "border-sky-200"}`}

@@ -104,7 +104,7 @@ const Step2Booking = ({ formData, setFormData }) => {
                   minDate={new Date()}
                   dateFormat="dd/MM/yyyy"
                   placeholderText="DD/MM/YYYY"
-                  className="w-[300px] bg-gray-50 border-0 ring-1 ring-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
+                  className="w-[300px] bg-gray-50 border-0 ring-1 ring-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm cursor-pointer"
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none" />
               </div>
@@ -140,7 +140,7 @@ const Step2Booking = ({ formData, setFormData }) => {
                   minDate={new Date()}
                   dateFormat="dd/MM/yyyy"
                   placeholderText="DD/MM/YYYY"
-                  className="w-[300px] bg-gray-50 border-0 ring-1 ring-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
+                  className="w-[300px] bg-gray-50 border-0 ring-1 ring-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm cursor-pointer"
                 />
                 <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none" />
               </div>

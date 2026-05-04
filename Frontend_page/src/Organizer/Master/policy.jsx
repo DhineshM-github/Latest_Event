@@ -9,6 +9,8 @@ import {
   AlertCircle,
   Info,
   Search,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import {
   getPolicies,
@@ -20,6 +22,8 @@ import {
 export const PolicyPage = () => {
   const [policies, setPolicies] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
   const [showForm, setShowForm] = useState(false);
   const [viewData, setViewData] = useState(null);
@@ -171,6 +175,16 @@ export const PolicyPage = () => {
     p.policy_name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPolicies = filteredPolicies.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredPolicies.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="px-6 py-4 sm:p-10 min-h-screen bg-sky-50">
       {/* TOAST */}
@@ -231,23 +245,23 @@ export const PolicyPage = () => {
             <thead>
               <tr className="bg-sky-600 text-white">
 
-                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">
                   Action
                 </th>
 
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                   Policy Code
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                   Policy Name
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                   Group
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
                   Status
                 </th>
                 
@@ -256,8 +270,8 @@ export const PolicyPage = () => {
 
             {/* BODY */}
             <tbody className="divide-y divide-slate-50">
-              {filteredPolicies.length > 0 ? (
-                filteredPolicies.map((p) => (
+              {currentPolicies.length > 0 ? (
+                currentPolicies.map((p) => (
                   <tr key={p.id} className="hover:bg-sky-50/50 transition-colors duration-200 group"
                   >
                     {/* ACTION */}
@@ -327,6 +341,43 @@ export const PolicyPage = () => {
           </table>
         </div>
       </div>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div className="flex gap-2">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                  currentPage === i + 1 
+                    ? "bg-sky-600 text-white shadow-lg shadow-sky-200" 
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
 
       {/* ================= CREATE MODAL ================= */}
 

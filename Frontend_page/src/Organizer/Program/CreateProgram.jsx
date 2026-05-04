@@ -21,6 +21,13 @@ export default function CreateProgram() {
   const [toast, setToast] = useState(false);
   const [errors, setErrors] = useState({ name: "", code: "" });
 
+  const [currentPage1, setCurrentPage1] = useState(1);
+  const [currentPage2, setCurrentPage2] = useState(1);
+  const itemsPerPage = 10;
+
+  const now = new Date();
+  const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -53,12 +60,26 @@ export default function CreateProgram() {
     (e.event_name || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalPages1 = Math.ceil(filtered.length / itemsPerPage);
+  const currentEvents = filtered.slice((currentPage1 - 1) * itemsPerPage, currentPage1 * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage1(1);
+  }, [search]);
+
   const filteredPrograms = programs.filter((p) =>
     (p.program_name || "").toLowerCase().includes(progSearch.toLowerCase())
   ).filter((p) => {
     if (viewBy === "All") return true;
     return p.status === viewBy;
   });
+
+  const totalPages2 = Math.ceil(filteredPrograms.length / itemsPerPage);
+  const currentProgramsList = filteredPrograms.slice((currentPage2 - 1) * itemsPerPage, currentPage2 * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage2(1);
+  }, [progSearch, viewBy]);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -129,7 +150,7 @@ export default function CreateProgram() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filtered.length === 0 ? (
+                    {currentEvents.length === 0 ? (
                       <tr>
                         <td colSpan="7" className="p-12 text-center">
                           <div className="flex flex-col items-center gap-3">
@@ -141,7 +162,7 @@ export default function CreateProgram() {
                         </td>
                       </tr>
                     ) : (
-                      filtered.map((event, i) => (
+                      currentEvents.map((event, i) => (
                         <tr key={i} className="hover:bg-sky-50/30 transition-all group">
                           <td className="p-4 pl-8">
                             <button
@@ -186,6 +207,37 @@ export default function CreateProgram() {
                 </table>
               </div>
             </div>
+
+            {/* Pagination Page 1 */}
+            {totalPages1 > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                <button
+                  onClick={() => setCurrentPage1(p => Math.max(1, p - 1))}
+                  disabled={currentPage1 === 1}
+                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
+                  <Search size={16} className="rotate-180" />
+                </button>
+                <div className="flex gap-2">
+                  {[...Array(totalPages1)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage1(i + 1)}
+                      className={`w-10 h-10 rounded-lg font-bold transition-all ${currentPage1 === i + 1 ? "bg-sky-600 text-white shadow-lg" : "bg-white border text-gray-600 hover:bg-gray-50"}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage1(p => Math.min(totalPages1, p + 1))}
+                  disabled={currentPage1 === totalPages1}
+                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
+                  <Search size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -255,7 +307,7 @@ export default function CreateProgram() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filteredPrograms.length === 0 ? (
+                    {currentProgramsList.length === 0 ? (
                       <tr>
                         <td colSpan="5" className="p-12 text-center">
                           <div className="flex flex-col items-center gap-3">
@@ -268,7 +320,7 @@ export default function CreateProgram() {
                         </td>
                       </tr>
                     ) : (
-                      filteredPrograms.map((prog, idx) => (
+                      currentProgramsList.map((prog, idx) => (
                         <tr key={idx} className="hover:bg-sky-50/30 transition-all group">
                           <td className="p-4">
                             <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
@@ -285,13 +337,12 @@ export default function CreateProgram() {
                             <span className="text-sm font-bold text-slate-600">{prog.type}</span>
                           </td>
                           <td className="p-4">
-                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                              prog.status === "Active"
+                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${prog.status === "Active"
                                 ? "bg-emerald-100 text-emerald-600 border border-emerald-200"
                                 : prog.status === "Inactive"
-                                ? "bg-rose-100 text-rose-600 border border-rose-200"
-                                : "bg-amber-100 text-amber-600 border border-amber-200"
-                            }`}>
+                                  ? "bg-rose-100 text-rose-600 border border-rose-200"
+                                  : "bg-amber-100 text-amber-600 border border-amber-200"
+                              }`}>
                               {prog.status === "Active" ? "Approved" : prog.status === "Inactive" ? "Rejected" : prog.status}
                             </span>
                           </td>
@@ -302,6 +353,37 @@ export default function CreateProgram() {
                 </table>
               </div>
             </div>
+
+            {/* Pagination Page 2 */}
+            {totalPages2 > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                <button
+                  onClick={() => setCurrentPage2(p => Math.max(1, p - 1))}
+                  disabled={currentPage2 === 1}
+                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
+                  <Search size={16} className="rotate-180" />
+                </button>
+                <div className="flex gap-2">
+                  {[...Array(totalPages2)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage2(i + 1)}
+                      className={`w-10 h-10 rounded-lg font-bold transition-all ${currentPage2 === i + 1 ? "bg-sky-600 text-white shadow-lg" : "bg-white border text-gray-600 hover:bg-gray-50"}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage2(p => Math.min(totalPages2, p + 1))}
+                  disabled={currentPage2 === totalPages2}
+                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
+                  <Search size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -391,12 +473,12 @@ export default function CreateProgram() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-gray-600 mb-1 font-medium">Start Date & Time</label>
-                      <input name="start" value={formData.start} onChange={handleInputChange} type="datetime-local" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" />
+                      <label className="block text-gray-600 mb-1 font-medium">Start Date</label>
+                      <input name="start" value={formData.start} onChange={handleInputChange} type="date" min={todayLocal} className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" />
                     </div>
                     <div>
-                      <label className="block text-gray-600 mb-1 font-medium">End Date & Time</label>
-                      <input name="end" value={formData.end} onChange={handleInputChange} type="datetime-local" className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" />
+                      <label className="block text-gray-600 mb-1 font-medium">End Date</label>
+                      <input name="end" value={formData.end} onChange={handleInputChange} type="date" min={formData.start || todayLocal} className="w-full border border-gray-300 rounded px-3 py-2 outline-none focus:border-blue-500" />
                     </div>
                   </div>
                 </div>

@@ -270,13 +270,13 @@ const Step6VendorSponsor = ({ formData, setFormData }) => {
     "w-full h-[45px] px-6 py-2 rounded-full bg-white border border-gray-200 text-black transition-all duration-200 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 placeholder:text-gray-400 placeholder:font-bold text-sm font-bold";
   const selectClasses = `${inputClasses} appearance-none bg-[url('data:image/svg+xml;utf8,<svg fill=\"%236b7280\" height=\"20\" viewBox=\"0 0 24 24\" width=\"20\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M7 10l5 5 5-5z\"/></svg>')] bg-no-repeat bg-[right_1rem_center] cursor-pointer`;
   const labelClasses =
-    "block text-[11px] font-extrabold text-slate-900 mb-1.5 ml-4 tracking-wider";
+    "block text-[13px] font-extrabold text-slate-900 mb-1.5 ml-4 tracking-wider";
   const cardClasses =
     "bg-white p-5 rounded-[2.5rem] shadow-sm border border-gray-100/50 flex flex-col hover:shadow-md transition-shadow duration-300";
   const sectionTitleClasses =
     "text-xl font-bold text-gray-800 mb-4 border-l-4 border-purple-500 pl-4 flex items-center gap-3";
   const tableHeaderClasses =
-    "bg-gray-50/50 text-gray-400 text-[10px] font-bold uppercase tracking-widest p-4 text-left first:rounded-l-2xl last:rounded-r-2xl";
+    "bg-gray-50/50 text-slate-900 text-sm font-bold tracking-wider p-4 text-left first:rounded-l-2xl last:rounded-r-2xl";
   const tableCellClasses =
     "p-4 text-sm text-black border-b border-gray-50/50 font-bold";
   const actionButtonClasses =

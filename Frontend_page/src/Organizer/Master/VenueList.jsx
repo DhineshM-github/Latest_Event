@@ -10,6 +10,8 @@ import {
   Search,
   Trash2,
   Info,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import {
   getVenueDetails,
@@ -24,6 +26,8 @@ import {
 export const Venuepage = () => {
   const { t } = useTranslation();
   const [venues, setVenues] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [showForm, setShowForm] = useState(false);
   const [viewData, setViewData] = useState(null);
 
@@ -291,6 +295,16 @@ export const Venuepage = () => {
       (v.address || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentVenues = filteredVenues.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredVenues.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   // ================= UI =================
 
   return (
@@ -344,8 +358,8 @@ export const Venuepage = () => {
           </thead>
 
           <tbody className="divide-y divide-slate-50">
-            {filteredVenues.length > 0 ? (
-              filteredVenues.map((v) => (
+            {currentVenues.length > 0 ? (
+              currentVenues.map((v) => (
                 <tr key={v.id} className="hover:bg-sky-50/50 transition-colors duration-200 group">
 
                   <td className="px-6 py-4">
@@ -398,6 +412,43 @@ export const Venuepage = () => {
           </tbody>
         </table>
       </div>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div className="flex gap-2">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                  currentPage === i + 1 
+                    ? "bg-sky-600 text-white shadow-lg shadow-sky-200" 
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
 
       {/* ================= CREATE MODAL ================= */}
 

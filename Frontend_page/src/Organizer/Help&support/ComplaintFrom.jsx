@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { getComplaints, getApprovedEvents, createComplaint, deleteComplaint } from "../../Services/api";
-import { Trash2, Plus, Search, ArrowLeft, Star, AlertCircle, XCircle, Eye } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Search,
+  ArrowLeft,
+  Star,
+  AlertCircle,
+  XCircle,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
+} from "lucide-react";
 
 function StarRating({ rating, setRating }) {
   return (
@@ -75,6 +88,10 @@ export default function ComplaintPage() {
   const [search, setSearch] = useState("");
   const [viewingComplaint, setViewingComplaint] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [event, setEvent] = useState("");
   const [explanation, setExplanation] = useState("");
@@ -198,7 +215,7 @@ export default function ComplaintPage() {
   if (showForm) {
     return (
       <div className="min-h-screen bg-[#fafafa] p-8 font-sans">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={() => setShowForm(false)}
@@ -206,78 +223,97 @@ export default function ComplaintPage() {
             >
               <ArrowLeft size={20} />
             </button>
-            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">New Complaint Information</h2>
+            <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+              New Support Complaint
+            </h2>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
-              {/* Left Column: Event & Explanation */}
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Select Event <span className="text-red-500">*</span> </label>
-                  <select
-                    value={event}
-                    onChange={(e) => { setEvent(e.target.value); setErrors(prev => ({ ...prev, event: "" })); }}
-                    className={`w-full bg-gray-50 border ${errors.event ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} rounded-xl px-4 py-3 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer`}
-                  >
-                    <option value="">Choose an event</option>
-                    {events.map((e) => (
-                      <option key={e.id} value={e.id}>{e.event_name}</option>
-                    ))}
-                  </select>
-                  {errors.event && (
-                    <p className="text-red-500 text-xs mt-1.5 ml-1 animate-pulse">
-                      {errors.event}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Explanation <span className="text-red-500">*</span></label>
-                  <textarea
-                    value={explanation}
-                    onChange={(e) => { setExplanation(e.target.value); setErrors(prev => ({ ...prev, explanation: "" })); }}
-                    className={`w-full bg-gray-50 border ${errors.explanation ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-200'} rounded-xl px-6 py-4 h-44 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all resize-none`}
-                    placeholder="Describe your issue in detail..."
-                  />
-                  {errors.explanation && (
-                    <p className="text-red-500 text-xs mt-1.5 ml-1 animate-pulse">
-                      {errors.explanation}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Column: Ratings */}
-              <div className="bg-gray-50 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-gray-600 uppercase tracking-widest mb-6">Service Ratings</h3>
-                <div className="space-y-5">
-                  {Object.keys(ratings).map((key) => (
-                    <div key={key} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100">
-                      <span className="text-sm font-medium text-gray-700 capitalize">{key}</span>
-                      <StarRating
-                        rating={ratings[key]}
-                        setRating={(val) => setRatings(prev => ({ ...prev, [key]: val }))}
-                      />
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.03)] overflow-hidden">
+            <div className="p-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                {/* Left Column: Event & Explanation */}
+                <div className="space-y-8">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 uppercase tracking-widest mb-3 ml-1">
+                      Event Reference <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <select
+                        className={`w-full bg-gray-50 border ${errors.event ? "border-red-500 ring-1 ring-red-500" : "border-gray-200"} rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer font-medium text-gray-700`}
+                        value={event}
+                        onChange={(e) => { setEvent(e.target.value); setErrors(prev => ({ ...prev, event: "" })); }}
+                      >
+                        <option value="">Select Target Event</option>
+                        {events.map((e) => (
+                          <option key={e.id} value={e.id}>{e.event_name}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <ChevronDown size={20} />
+                      </div>
                     </div>
-                  ))}
+                    {errors.event && (
+                      <p className="text-red-500 text-xs font-bold mt-2 ml-2 flex items-center gap-1.5 animate-pulse">
+                        <AlertCircle size={14} />
+                        {errors.event}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 uppercase tracking-widest mb-3 ml-1">
+                      Detailed Explanation <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      className={`w-full bg-gray-50 border ${errors.explanation ? "border-red-500 ring-1 ring-red-500" : "border-gray-200"} rounded-3xl px-8 py-6 h-56 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all resize-none font-medium text-gray-700 leading-relaxed`}
+                      placeholder="Describe your issue in detail..."
+                      value={explanation}
+                      onChange={(e) => { setExplanation(e.target.value); setErrors(prev => ({ ...prev, explanation: "" })); }}
+                    />
+                    {errors.explanation && (
+                      <p className="text-red-500 text-xs font-bold mt-2 ml-2 flex items-center gap-1.5 animate-pulse">
+                        <AlertCircle size={14} />
+                        {errors.explanation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Column: Ratings */}
+                <div className="bg-blue-50/30 rounded-3xl p-8 border border-blue-50">
+                  <h3 className="text-sm font-black text-sky-600 uppercase tracking-widest mb-8 text-center">
+                    Service Ratings
+                  </h3>
+                  <div className="space-y-4">
+                    {Object.keys(ratings).map((key) => (
+                      <div key={key} className="flex items-center justify-between bg-white p-4 rounded-2xl border border-sky-100 shadow-sm transition-all hover:shadow-md">
+                        <span className="text-sm font-bold text-slate-600 capitalize">
+                          {key}
+                        </span>
+                        <StarRating
+                          rating={ratings[key]}
+                          setRating={(val) => setRatings(prev => ({ ...prev, [key]: val }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-100">
-              <button
-                onClick={() => setShowForm(false)}
-                className="px-8 py-3 rounded-xl border border-gray-300 font-semibold text-gray-600 hover:bg-gray-50 transition-all shadow-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitComplaint}
-                className="px-10 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-200"
-              >
-                Submit Feedback
-              </button>
+              <div className="flex justify-end items-center gap-4 mt-12 pt-8 border-t border-gray-100">
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="px-8 py-4 rounded-2xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50 transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitComplaint}
+                  className="px-12 py-4 rounded-2xl bg-sky-600 text-white font-black hover:bg-sky-700 active:scale-95 transition-all shadow-2xl shadow-sky-200 tracking-wide flex items-center gap-3"
+                >
+                  Submit Complaint
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -292,52 +328,62 @@ export default function ComplaintPage() {
     c.event_name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredComplaints.length / itemsPerPage);
+  const currentComplaints = filteredComplaints.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   return (
     <div className="min-h-screen bg-[#fafafa] p-8 font-sans">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-1">Complaints Management</h1>
-            <p className="text-gray-500 font-medium tracking-wide">Monitor and resolve event-related feedback</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-sky-900 tracking-tight">
+              Complaint Management
+            </h1>
           </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="group flex items-center gap-2 bg-blue-600 px-6 py-3 rounded-2xl text-white font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100"
-          >
-            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-            Raise Complaint
-          </button>
-        </div>
 
-        <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_10px_40px_rgb(0,0,0,0.02)] overflow-hidden">
-          <div className="p-6 border-b border-gray-50 flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search size={18} className="text-gray-400" />
-              </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative group flex-1 sm:flex-initial">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+              />
               <input
                 type="text"
+                placeholder="Search"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by code or event name..."
-                className="w-full bg-gray-50 border-none rounded-2xl pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-100 transition-all font-medium text-gray-700"
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                className="w-full sm:w-64 pl-9 pr-4 py-2 bg-white border border-sky-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-50 transition-all shadow-sm"
               />
             </div>
-          </div>
 
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2 rounded-xl flex gap-2 items-center justify-center font-bold shadow-lg shadow-sky-200 transition-all hover:scale-105 active:scale-95 text-sm"
+            >
+              <Plus size={18} />
+              Raise Complaint
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-sky-600 text-white">
-                  <th className="px-6 py-4 text-center text-xs font-bold text-white  tracking-wider">Actions</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white  tracking-wider">Complaint CODE</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white  tracking-wider">Event Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white  tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white  tracking-wider">Created On</th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Complaint Code</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Event Name</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Created On</th>
                 </tr>
               </thead>
-              <tbody>
-                {filteredComplaints.length === 0 ? (
+              <tbody className="divide-y divide-slate-50">
+                {currentComplaints.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center">
@@ -349,53 +395,92 @@ export default function ComplaintPage() {
                       </div>
                     </td>
                   </tr>
-                ) : (
-                  filteredComplaints.map((c) => (
-                    <tr key={c.id} className="hover:bg-sky-50/50 transition-colors duration-200 group">
-                      <td className="px-6 py-6 border-b border-gray-50">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => setViewingComplaint(c)}
-                            className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all active:scale-90"
-                            title="View Details"
-                          >
-                            <Eye size={20} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(c.id)}
-                            className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-90"
-                            title="Delete"
-                          >
-                            <Trash2 size={20} />
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6 border-b border-gray-50">
-                        <span className="font-mono font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg text-xs tracking-wider">
-                          {c.complaint_code}
-                        </span>
-                      </td>
-                      <td className="px-6 py-6 border-b border-gray-50">
-                        <p className="font-bold text-gray-800">{c.event_name}</p>
-                      </td>
-                      <td className="px-6 py-6 border-b border-gray-50">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-tighter shadow-sm ${c.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
-                          }`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${c.status === 'Active' ? 'bg-emerald-500' : 'bg-gray-400'}`} />
-                          {c.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-6 border-b border-gray-50 font-medium text-gray-500">
-                        {c.created_on}
-                      </td>
-
-                    </tr>
-                  ))
-                )}
+                ) : currentComplaints.map(row => (
+                  <tr key={row.id} className="hover:bg-blue-50/30 transition-colors group">
+                    <td className="px-2 py-2 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setViewingComplaint(row)}
+                          className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
+                          title="View"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(row.id)}
+                          className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg text-sm">
+                        {row.complaint_code}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-semibold text-slate-700 truncate max-w-[200px]">
+                        {row.event_name}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${row.status === "Active"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-red-100 text-red-700"
+                          }`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-500 font-medium">
+                      {row.created_on}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
+
         </div>
+
+        {/* PAGINATION */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8 mb-12">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            <div className="flex gap-2">
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1
+                      ? "bg-sky-600 text-white shadow-lg shadow-sky-200"
+                      : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}

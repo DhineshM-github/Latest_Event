@@ -266,17 +266,17 @@ const ViewEventDetails = ({ eventId, onClose }) => {
                  {(!layout?.stalls || layout.stalls.length === 0) ? (
                    <p className="text-gray-500 italic py-8 text-center bg-gray-50 rounded-xl">No stalls configured.</p>
                  ) : (
-                   <div className="overflow-x-auto">
+                   <div className="overflow-x-auto rounded-3xl shadow-xl">
                      <table className="w-full">
-                       <thead className="bg-gray-50 text-gray-600">
+                       <thead className="bg-sky-600 text-white">
                          <tr>
-                           <th className="px-6 py-4 text-left text-xs font-bold text-white tracking-wider">Stall name</th>
-                           <th className="px-6 py-4 text-left text-xs font-bold text-white tracking-wider">Size</th>
-                           <th className="px-6 py-4 text-left text-xs font-bold text-white tracking-wider">Type</th>
-                           <th className="px-6 py-4 text-left text-xs font-bold text-white tracking-wider">Visibility</th>
-                           <th className="px-6 py-4 text-left text-xs font-bold text-white tracking-wider">Price (INR)</th>
-                           <th className="px-6 py-4 text-left text-xs font-bold text-white tracking-wider">Prime price (INR)</th>
-                           <th className="px-6 py-4 text-left text-xs font-bold text-white tracking-wider">Prime seat check</th>
+                           <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Stall name</th>
+                           <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Size</th>
+                           <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Type</th>
+                           <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Visibility</th>
+                           <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Price (INR)</th>
+                           <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Prime price (INR)</th>
+                           <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Prime seat check</th>
                          </tr>
                        </thead>
                        <tbody className="divide-y divide-slate-50">

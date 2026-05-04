@@ -351,7 +351,7 @@ const CreateEvent = ({ onBack, editData }) => {
               if (!validateStep()) return;
               setStep(step + 1);
             }}
-            className="bg-indigo-600 text-white px-6 py-2 rounded"
+            className="bg-sky-700 text-white px-6 py-2 rounded"
           >
             Next
           </button>

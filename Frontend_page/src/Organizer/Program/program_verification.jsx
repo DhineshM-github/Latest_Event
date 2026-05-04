@@ -6,6 +6,10 @@ export const ProgramVerification = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -14,7 +18,6 @@ export const ProgramVerification = () => {
     setLoading(true);
     try {
       const res = await getProgramVerificationEvents();
-      console.log("Result", res)
       const formatted = res.map((item) => ({
         code: item.event_code,
         name: item.event_name,
@@ -31,6 +34,18 @@ export const ProgramVerification = () => {
     }
   };
 
+  const filteredData = data.filter(item =>
+    (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.code || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="bg-gray-100 min-h-screen p-8">
       {/* ================= PAGE 1 ================= */}
@@ -42,60 +57,98 @@ export const ProgramVerification = () => {
           </h1>
 
           <div className="bg-white shadow rounded-lg p-6">
-            <input
-              type="text"
-              placeholder="Search"
-              className="border px-4 py-2 mb-6 w-72 rounded"
-            />
+            <div className="flex justify-between items-center mb-6">
+              <input
+                type="text"
+                placeholder="Search"
+                className="border px-4 py-2 w-72 rounded outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
             <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="bg-sky-600 text-white">
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Action</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Event Code ↑↓</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Event Name ↑↓</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Inprocess</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Approved</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Rejected</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Action</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Event Code </th>
+                    <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Event Name</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">In-Progress</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">Approved</th>
+                    <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">Rejected</th>
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-slate-50">
-                  {data.map((item, index) => (
-                    <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-200 group bg-white">
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => setPage("details")}
-                          className="border px-3 py-1 rounded hover:bg-gray-200"
-                        >
-                          <Eye size={20} />
-                        </button>
+                  {currentData.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="p-12 text-center text-gray-400 italic font-medium">
+                        No events found matching your criteria
                       </td>
-
-                      <td className="px-6 py-4 text-slate-700">{item.code}</td>
-
-                      <td className="px-6 py-4 text-slate-700 text-left">{item.name}</td>
-
-                      <td className="px-6 py-4 text-slate-700 text-center">{item.inprocess}</td>
-
-                      <td className="px-6 py-4 text-slate-700 text-center">{item.approved}</td>
-
-                      <td className="px-6 py-4 text-slate-700 text-center">{item.rejected}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    currentData.map((item, index) => (
+                      <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-200 group bg-white">
+                        <td className="px-6 py-4">
+                          <button
+                            onClick={() => setPage("details")}
+                            className="text-blue-600 hover:text-blue-800 transition-colors"
+                          >
+                            <Eye size={20} />
+                          </button>
+                        </td>
+
+                        <td className="px-6 py-4 text-slate-700">{item.code}</td>
+
+                        <td className="px-6 py-4 text-slate-700 text-left">{item.name}</td>
+
+                        <td className="px-6 py-4 text-slate-700 text-center">{item.inprocess}</td>
+
+                        <td className="px-6 py-4 text-slate-700 text-center">{item.approved}</td>
+
+                        <td className="px-6 py-4 text-slate-700 text-center">{item.rejected}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
 
-            <div className="flex justify-between items-center mt-6">
-              <p className="text-gray-500">Showing 1 to 3 of 3 entries</p>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-6">
+                <p className="text-gray-500 text-sm">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
+                </p>
 
-              <select className="border px-2 py-1">
-                <option>10</option>
-                <option>20</option>
-              </select>
-            </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded disabled:opacity-40 hover:bg-gray-50"
+                  >
+                    Previous
+                  </button>
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-1 border rounded font-bold transition-all ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded disabled:opacity-40 hover:bg-gray-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

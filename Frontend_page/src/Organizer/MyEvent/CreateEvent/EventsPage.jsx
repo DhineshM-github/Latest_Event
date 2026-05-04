@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Pencil,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import { Eye, Trash2, CheckCircle } from "lucide-react";
 
@@ -143,8 +144,8 @@ const EventsPage = () => {
     }
   };
 
-  const filteredEvents = events.filter((e) =>
-    e.event_name?.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredEvents = (events || []).filter((e) =>
+    (e.event_name || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // ================= PAGINATION LOGIC =================
@@ -269,7 +270,7 @@ const EventsPage = () => {
 
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2.5 rounded-xl shadow-lg hover:bg-indigo-700 transition-all duration-300 hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 bg-sky-700 text-white px-6 py-2.5 rounded-xl shadow-lg hover:bg-sky-800 transition-all duration-300 hover:scale-105 active:scale-95"
           >
             <Plus size={20} />
             Create Event

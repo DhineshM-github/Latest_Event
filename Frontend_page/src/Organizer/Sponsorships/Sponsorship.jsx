@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Eye, Plus, X, CheckCircle, AlertCircle, Trash2, Search } from "lucide-react";
+import { Eye, Plus, X, CheckCircle, AlertCircle, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { getSponsors, getSponsorById, createSponsor, deleteSponsor } from "../../Services/api";
 
@@ -13,6 +13,8 @@ export const SponsorshipPage = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
@@ -340,6 +342,16 @@ export const SponsorshipPage = () => {
       (s.address || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentSponsors = filteredSponsors.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSponsors.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
       {/* TOAST NOTIFICATION */}
@@ -402,12 +414,12 @@ export const SponsorshipPage = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-sky-600 text-white">
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Action</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Code</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Sponsor Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Primary Contact</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Mail ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">Action</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Code</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Sponsor Name</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Primary Contact</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Mail ID</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Status</th>
                 </tr>
               </thead>
 
@@ -424,13 +436,13 @@ export const SponsorshipPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredSponsors.map((s, idx) => (
+                  currentSponsors.map((s, idx) => (
                     <tr
                       key={idx}
                       className="hover:bg-sky-50/30 transition-all group"
                     >
-                      <td className="p-4 pl-6">
-                        <div className="flex items-center gap-2">
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => viewSponsor(s.id)}
                             className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
@@ -484,6 +496,43 @@ export const SponsorshipPage = () => {
           </div>
         </div>
       </div>
+
+      {/* PAGINATION */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div className="flex gap-2">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-10 h-10 rounded-xl font-bold transition-all ${
+                  currentPage === i + 1 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200" 
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-blue-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      )}
 
       {/* ================= CREATE MODAL ================= */}
 
@@ -635,7 +684,7 @@ export const SponsorshipPage = () => {
                           <input
                             type="file"
                             onChange={(e) => handleDocument(e, index)}
-                            className="w-full text-[10px] text-blue-600 font-bold file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition-all cursor-pointer bg-white/50 p-1.5 rounded-lg border border-blue-50"
+                            className="w-full text-[10px] text-blue-600 font-bold file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 file:cursor-pointer transition-all cursor-pointer bg-white/50 p-1.5 rounded-lg border border-blue-50"
                           />
                           {documents.length > 1 && (
                             <button
@@ -671,7 +720,7 @@ export const SponsorshipPage = () => {
 
                     <button
                       type="submit"
-                      className="px-8 py-4 bg-gradient-to-r from-blue-500 to-sky-600 hover:scale-[1.01] transition-all rounded-2xl font-black text-white shadow-xl shadow-blue-100 uppercase tracking-widest"
+                      className="px-8 py-4 bg-gradient-to-r from-blue-500 to-sky-600 hover:scale-[1.01] transition-all rounded-2xl font-black text-white shadow-xl shadow-blue-100 tracking-widest"
                     >
                       Save Sponsor
                     </button>
