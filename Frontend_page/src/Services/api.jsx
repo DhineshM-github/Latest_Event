@@ -433,7 +433,11 @@ export const updateMessage = async (id, payload) => {
 
 // UPDATE Event
 export const updateEvent = async (id, formData) => {
-  const res = await api.put(`/superadmin/api/update-event/${id}`, formData);
+  const res = await api.put(`/superadmin/api/update-event/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return res.data;
 };
 

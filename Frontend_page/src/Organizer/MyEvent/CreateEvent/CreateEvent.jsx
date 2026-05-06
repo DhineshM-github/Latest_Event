@@ -261,7 +261,7 @@ const CreateEvent = ({ onBack, editData }) => {
       // Call Update or Create
       let res;
       if (editData) {
-        res = await updateEvent(editData.id, fd);
+        res = await updateEvent(editData.details.id, fd);
       } else {
         res = await completeEvent(fd);
       }
