@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 const roles = ["Event Manager", "Super Admin"];
 const users = ["John Smith", "Jane Doe", "Alice Johnson", "Bob Williams", "Carol White"];
@@ -165,7 +166,59 @@ export default function UserWiseScreenMapping() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-end gap-2 mt-4">
+          {/* Pagination Controls */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-4">
+              <p className="text-slate-500 text-sm font-medium">
+                Showing {rows.length === 0 ? 0 : (page - 1) * pageSize + 1} to {Math.min(page * pageSize, rows.length)} of {rows.length} entries
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronLeft size={20} className="text-slate-600" />
+                </button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-10 h-10 rounded-xl font-bold transition-all ${page === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronRight size={20} className="text-slate-600" />
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="hidden">
             <button
               onClick={() => setPage(1)}
               disabled={page === 1}

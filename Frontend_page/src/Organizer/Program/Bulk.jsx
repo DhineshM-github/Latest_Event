@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { getEventPasses, getEventBulkDetails } from "../../Services/api"
-import { Eye, Download, Search } from "lucide-react"
+import { Eye, Download, Search, ChevronLeft, ChevronRight } from "lucide-react"
 
 const BulkPassPage = () => {
 
@@ -11,6 +11,8 @@ const BulkPassPage = () => {
   const [search, setSearch] = useState("")
   const [perPage, setPerPage] = useState(10)
   const [loading, setLoading] = useState(false)
+  const [currentPageList, setCurrentPageList] = useState(1)
+  const [currentPageDetail, setCurrentPageDetail] = useState(1)
 
   useEffect(() => {
     getEventPasses().then((data) => {
@@ -46,6 +48,17 @@ const BulkPassPage = () => {
     d.name.toLowerCase().includes(search.toLowerCase()) ||
     d.visitor_code.toLowerCase().includes(search.toLowerCase())
   )
+
+  const totalPagesList = Math.ceil(filtered.length / perPage)
+  const currentDataList = filtered.slice((currentPageList - 1) * perPage, currentPageList * perPage)
+
+  const totalPagesDetail = Math.ceil(filteredDetails.length / perPage)
+  const currentDataDetail = filteredDetails.slice((currentPageDetail - 1) * perPage, currentPageDetail * perPage)
+
+  useEffect(() => {
+    setCurrentPageList(1)
+    setCurrentPageDetail(1)
+  }, [search, perPage])
 
   return (
 
@@ -93,7 +106,7 @@ const BulkPassPage = () => {
 
               <tbody className="divide-y divide-slate-50">
 
-                {filtered.map((event, index) => (
+                {currentDataList.map((event, index) => (
 
                   <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-200 group">
 
@@ -132,7 +145,14 @@ const BulkPassPage = () => {
 
           </div>
 
-          <Pagination total={filtered.length} perPage={perPage} setPerPage={setPerPage} />
+          <Pagination
+            currentPage={currentPageList}
+            totalPages={totalPagesList}
+            onPageChange={setCurrentPageList}
+            itemsPerPage={perPage}
+            onItemsPerPageChange={setPerPage}
+            totalItems={filtered.length}
+          />
 
         </div>
 
@@ -191,7 +211,7 @@ const BulkPassPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredDetails.map((item, idx) => (
+                  currentDataDetail.map((item, idx) => (
                     <tr key={idx} className="hover:bg-sky-50/50 transition-colors duration-200 group">
                       <td className="px-6 py-4 text-center">
                         <button className="text-blue-600 hover:scale-110" title="Download Pass">
@@ -212,6 +232,15 @@ const BulkPassPage = () => {
             </table>
 
           </div>
+
+          <Pagination
+            currentPage={currentPageDetail}
+            totalPages={totalPagesDetail}
+            onPageChange={setCurrentPageDetail}
+            itemsPerPage={perPage}
+            onItemsPerPageChange={setPerPage}
+            totalItems={filteredDetails.length}
+          />
 
           {/* BACK BUTTON */}
 
@@ -239,45 +268,67 @@ const BulkPassPage = () => {
 
 export default BulkPassPage;
 
-function Pagination({ total, perPage, setPerPage }) {
-
-  const showing = total === 0
-    ? "0 to 0 of 0"
-    : `1 to ${Math.min(total, perPage)} of ${total}`
+function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  itemsPerPage,
+  onItemsPerPageChange,
+  totalItems
+}) {
+  if (totalItems === 0) return null;
 
   return (
-
-    <div className="flex items-center justify-between pt-4 pb-2 text-sm text-gray-600">
-
-      <span>Showing {showing} entries</span>
-
-      <div className="flex items-center gap-1">
-        <button className="px-2 py-1 text-gray-400 hover:text-blue-600 transition">«</button>
-        <button className="px-2 py-1 text-gray-400 hover:text-blue-600 transition">‹</button>
-        <button className="w-7 h-7 rounded text-white text-xs bg-blue-600 font-medium">
-          1
-        </button>
-        <button className="px-2 py-1 text-gray-400 hover:text-blue-600 transition">›</button>
-        <button className="px-2 py-1 text-gray-400 hover:text-blue-600 transition">»</button>
+    <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-2">
+      <div className="flex items-center gap-4">
+        <p className="text-slate-500 text-sm font-medium">
+          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => {
+              onItemsPerPageChange(Number(e.target.value));
+              onPageChange(1);
+            }}
+            className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500">Items per page:</span>
-        <select
-          value={perPage}
-          onChange={(e) => setPerPage(Number(e.target.value))}
-          className="border rounded px-2 py-1 text-xs outline-none focus:border-blue-500"
-        >
-
-          <option>10</option>
-          <option>25</option>
-          <option>50</option>
-
-        </select>
-      </div>
-
+      {totalPages > 1 && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronLeft size={20} className="text-slate-600" />
+          </button>
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => onPageChange(i + 1)}
+              className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+          >
+            <ChevronRight size={20} className="text-slate-600" />
+          </button>
+        </div>
+      )}
     </div>
-
-  )
-
+  );
 }

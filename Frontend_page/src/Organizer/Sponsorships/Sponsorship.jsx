@@ -14,12 +14,13 @@ export const SponsorshipPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const [errors, setErrors] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     sponsor_name: "",
@@ -44,18 +45,12 @@ export const SponsorshipPage = () => {
     loadSponsors();
   }, []);
 
-  // Auto-close toast after 5 seconds
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   // ================= TOAST NOTIFICATION =================
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
+  const showNotification = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 3000);
   };
 
   // ================= LOAD SPONSORS =================
@@ -65,7 +60,7 @@ export const SponsorshipPage = () => {
       const res = await getSponsors();
       setSponsors(res);
     } catch (error) {
-      showToast("Failed to load sponsors", "error");
+      showNotification("Failed to load sponsors", "error");
     }
   };
 
@@ -150,14 +145,14 @@ export const SponsorshipPage = () => {
 
   const addDocument = () => {
     if (documents.length >= 3) {
-      showToast("Maximum 3 documents allowed", "error");
+      showNotification("Maximum 3 documents allowed", "error");
       return;
     }
 
     // Check if the current last document has a file uploaded
     const lastDoc = documents[documents.length - 1];
     if (lastDoc && !lastDoc.document_file) {
-      showToast("Please upload the file for the current document before adding another", "error");
+      showNotification("Please upload the file for the current document before adding another", "error");
       return;
     }
 
@@ -216,27 +211,40 @@ export const SponsorshipPage = () => {
       return;
     }
 
-    // 4. Document Validation
-    for (let i = 0; i < documents.length; i++) {
-      const doc = documents[i];
+    // 4. Document Validation (Only for fully filled documents)
+    const filledDocuments = documents.filter(
+      (doc) => doc.document_type && doc.document_type !== "Document Type" && doc.document_number && doc.document_file
+    );
+
+    for (let i = 0; i < filledDocuments.length; i++) {
+      const doc = filledDocuments[i];
+      if (!doc.document_type || doc.document_type === "Document Type") {
+        showNotification(`Document ${i + 1}: Please select document type`, "error");
+        return;
+      }
+      if (!doc.document_number) {
+        showNotification(`Document ${i + 1}: Please enter document number`, "error");
+        return;
+      }
       if (doc.document_type === "Aadhar" && doc.document_number.length !== 12) {
-        showToast(`Document ${i + 1}: Aadhar must be exactly 12 digits`, "error");
+        showNotification(`Document ${i + 1}: Aadhar must be exactly 12 digits`, "error");
         return;
       }
       if (doc.document_type === "PAN" && doc.document_number.length !== 10) {
-        showToast(`Document ${i + 1}: PAN must be exactly 10 characters`, "error");
+        showNotification(`Document ${i + 1}: PAN must be exactly 10 characters`, "error");
         return;
       }
       if (!doc.document_file) {
-        showToast(`Document ${i + 1}: Please upload the document file`, "error");
+        showNotification(`Document ${i + 1}: Please upload the document file`, "error");
         return;
       }
     }
 
     try {
-      await createSponsor(form);
+      setLoading(true);
+      await createSponsor({ ...form, documents: filledDocuments });
 
-      showToast("✓ Sponsor Created Successfully!", "success");
+      showNotification("Sponsor Created Successfully!", "success");
 
       setShowForm(false);
 
@@ -264,11 +272,13 @@ export const SponsorshipPage = () => {
 
       loadSponsors();
     } catch (error) {
-      showToast(
+      showNotification(
         error.response?.data?.message ||
         "Failed to create sponsor. Please try again.",
         "error",
       );
+    } finally {
+      setLoading(false);
     }
   };
   const onBack = () => {
@@ -305,7 +315,7 @@ export const SponsorshipPage = () => {
 
       setViewData(res);
     } catch (error) {
-      showToast("Failed to load sponsor details", "error");
+      showNotification("Failed to load sponsor details", "error");
     }
   };
 
@@ -322,12 +332,14 @@ export const SponsorshipPage = () => {
 
   const confirmDelete = async () => {
     try {
+      setLoading(true);
       await deleteSponsor(confirmDeleteId);
-      showToast("✓ Sponsor Deleted Successfully!", "success");
+      showNotification("Sponsor Deleted Successfully!", "success");
       loadSponsors();
     } catch (error) {
-      showToast("Failed to delete sponsor", "error");
+      showNotification("Failed to delete sponsor", "error");
     } finally {
+      setLoading(false);
       setShowDeleteModal(false);
       setConfirmDeleteId(null);
     }
@@ -355,32 +367,15 @@ export const SponsorshipPage = () => {
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
       {/* TOAST NOTIFICATION */}
-      {toast && (
-        <div
-          className={`fixed top-6 right-6 flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl z-[9999] animate-in fade-in slide-in-from-right duration-300 border-l-4 ${toast.type === "success"
-            ? "bg-white border-emerald-500"
-            : "bg-white border-rose-500"
-            }`}
-        >
-          <div className={`p-2 rounded-xl ${toast.type === "success" ? "bg-emerald-100" : "bg-rose-100"}`}>
-            {toast.type === "success" ? (
-              <CheckCircle size={20} className="text-emerald-600" />
-            ) : (
-              <AlertCircle size={20} className="text-rose-600" />
-            )}
+      {toast.show && (
+        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${toast.type === "success"
+            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200"
+            : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
+          }`}>
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+            {toast.type === "success" ? "✓" : "!"}
           </div>
-          <div className="flex flex-col">
-            <span className="text-slate-800 font-bold text-sm tracking-tight">
-              {toast.type === "success" ? "Success" : "Notification"}
-            </span>
-            <span className="text-slate-500 text-xs font-medium">{toast.message}</span>
-          </div>
-          <button
-            onClick={() => setToast(null)}
-            className="ml-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <X size={16} />
-          </button>
+          <p className="font-bold text-sm tracking-wide">{toast.message}</p>
         </div>
       )}
 
@@ -414,12 +409,12 @@ export const SponsorshipPage = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-sky-600 text-white">
-                  <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">Action</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Code</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Sponsor Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Primary Contact</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Mail ID</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-center text-md font-bold text-white tracking-wider">Action</th>
+                  <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Code</th>
+                  <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Sponsor Name</th>
+                  <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Primary Contact</th>
+                  <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Mail ID</th>
+                  <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Status</th>
                 </tr>
               </thead>
 
@@ -441,7 +436,7 @@ export const SponsorshipPage = () => {
                       key={idx}
                       className="hover:bg-sky-50/30 transition-all group"
                     >
-                      <td className="p-4">
+                      <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => viewSponsor(s.id)}
@@ -459,28 +454,28 @@ export const SponsorshipPage = () => {
                         </div>
                       </td>
 
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                           {s.sponsor_code}
                         </span>
                       </td>
 
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-black text-slate-800">{s.sponsor_name}</span>
                           <span className="text-[10px] font-bold text-slate-400 truncate max-w-[150px]">{s.address}</span>
                         </div>
                       </td>
 
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <span className="text-sm font-bold text-slate-600">{s.primary_contact}</span>
                       </td>
 
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <span className="text-sm font-medium text-sky-600 hover:underline cursor-pointer">{s.mail_id}</span>
                       </td>
 
-                      <td className="p-4">
+                      <td className="px-6 py-4">
                         <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${s.status === "Active"
                           ? "bg-emerald-100 text-emerald-600 border border-emerald-200"
                           : "bg-amber-100 text-amber-600 border border-amber-200"
@@ -497,40 +492,58 @@ export const SponsorshipPage = () => {
         </div>
       </div>
 
-      {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="flex gap-2">
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${
-                  currentPage === i + 1 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200" 
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-blue-50"
-                }`}
+      {/* Pagination Controls */}
+      {filteredSponsors.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-4 py-3 bg-white border border-slate-100 rounded-2xl">
+          <div className="flex items-center gap-4">
+            <p className="text-slate-500 text-sm font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredSponsors.length)} of {filteredSponsors.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
               >
-                {i + 1}
-              </button>
-            ))}
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
           </div>
 
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronRight size={20} />
-          </button>
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronLeft size={20} className="text-slate-600" />
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronRight size={20} className="text-slate-600" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -572,7 +585,7 @@ export const SponsorshipPage = () => {
                       {/* Name & Primary Contact */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1">
+                          <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                             Sponsor Name <span className="text-red-500 font-bold lowercase tracking-normal ml-1">*</span>
                           </label>
                           <input
@@ -586,7 +599,7 @@ export const SponsorshipPage = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1">
+                          <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                             Primary Contact <span className="text-red-500 font-bold lowercase tracking-normal ml-1">*</span>
                           </label>
                           <input
@@ -603,7 +616,7 @@ export const SponsorshipPage = () => {
                       {/* Secondary & Mail */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1">
+                          <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                             Secondary Contact
                           </label>
                           <input
@@ -616,7 +629,7 @@ export const SponsorshipPage = () => {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1">
+                          <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                             Mail ID <span className="text-red-500 font-bold lowercase tracking-normal ml-1">*</span>
                           </label>
                           <input
@@ -632,7 +645,7 @@ export const SponsorshipPage = () => {
 
                       {/* Address */}
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest ml-1">
+                        <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                           Address <span className="text-red-500 font-bold lowercase tracking-normal ml-1">*</span>
                         </label>
                         <textarea
@@ -653,7 +666,7 @@ export const SponsorshipPage = () => {
                   <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm h-full flex flex-col">
                     <h3 className="text-lg font-bold text-blue-700 mb-5 flex items-center gap-2">
                       <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
-                      Sponsor Documents
+                      Sponsor Documents (Optional)
                     </h3>
 
                     <div className="flex-1 space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
@@ -683,9 +696,17 @@ export const SponsorshipPage = () => {
                           </div>
                           <input
                             type="file"
+                            id={`doc-file-${index}`}
                             onChange={(e) => handleDocument(e, index)}
-                            className="w-full text-[10px] text-blue-600 font-bold file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 file:cursor-pointer transition-all cursor-pointer bg-white/50 p-1.5 rounded-lg border border-blue-50"
+                            className="hidden"
                           />
+                          <label
+                            htmlFor={`doc-file-${index}`}
+                            className="w-full text-[10px] text-blue-600 font-bold cursor-pointer bg-white/50 p-2 rounded-lg border border-blue-50 flex items-center justify-between hover:bg-blue-100 transition-all duration-200"
+                          >
+                            <span>{documents[index].document_file ? "File Uploaded" : "Choose File"}</span>
+                            <span className="bg-blue-100 px-3 py-1 rounded-full text-[10px] font-black uppercase text-blue-700">Browse</span>
+                          </label>
                           {documents.length > 1 && (
                             <button
                               type="button"
@@ -720,9 +741,10 @@ export const SponsorshipPage = () => {
 
                     <button
                       type="submit"
-                      className="px-8 py-4 bg-gradient-to-r from-blue-500 to-sky-600 hover:scale-[1.01] transition-all rounded-2xl font-black text-white shadow-xl shadow-blue-100 tracking-widest"
+                      disabled={loading}
+                      className="px-8 py-4 bg-gradient-to-r from-blue-500 to-sky-600 hover:scale-[1.01] transition-all rounded-2xl font-black text-white shadow-xl shadow-blue-100 tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Save Sponsor
+                      {loading ? "Saving..." : "Save Sponsor"}
                     </button>
                   </div>
                 </div>
@@ -752,7 +774,7 @@ export const SponsorshipPage = () => {
             <div className="p-8 grid grid-cols-2 gap-6">
               {/* Sponsor Code */}
               <div className="space-y-1">
-                <label className="text-xs font-black text-blue-400 uppercase tracking-widest ml-1">
+                <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                   Sponsor Code
                 </label>
                 <input
@@ -765,7 +787,7 @@ export const SponsorshipPage = () => {
 
               {/* Sponsor Name */}
               <div className="space-y-1">
-                <label className="text-xs font-black text-blue-400 uppercase tracking-widest ml-1">
+                <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                   Sponsor Name
                 </label>
                 <input
@@ -778,7 +800,7 @@ export const SponsorshipPage = () => {
 
               {/* Primary Contact */}
               <div className="space-y-1">
-                <label className="text-xs font-black text-blue-400 uppercase tracking-widest ml-1">
+                <label className="text-xs font-bold text-blue-500 tracking-tight ml-1">
                   Primary Contact
                 </label>
                 <input
@@ -869,9 +891,10 @@ export const SponsorshipPage = () => {
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 px-6 py-3.5 bg-rose-500 text-white font-bold rounded-2xl hover:bg-rose-600 transition-all shadow-lg shadow-rose-200 active:scale-95"
+                  disabled={loading}
+                  className="flex-1 px-6 py-3.5 bg-rose-500 text-white font-bold rounded-2xl hover:bg-rose-600 transition-all shadow-lg shadow-rose-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Delete
+                  {loading ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>

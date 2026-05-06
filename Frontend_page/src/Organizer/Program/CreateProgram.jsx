@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, ArrowLeft, Plus, Search, ChevronDown } from "lucide-react";
+import { Eye, ArrowLeft, Plus, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { createProgram as createProgramAPI, getProgramEvents, getProgramsByEvent } from "../../Services/api";
 
 export default function CreateProgram() {
@@ -23,7 +23,7 @@ export default function CreateProgram() {
 
   const [currentPage1, setCurrentPage1] = useState(1);
   const [currentPage2, setCurrentPage2] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const now = new Date();
   const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -209,33 +209,57 @@ export default function CreateProgram() {
             </div>
 
             {/* Pagination Page 1 */}
-            {totalPages1 > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6">
-                <button
-                  onClick={() => setCurrentPage1(p => Math.max(1, p - 1))}
-                  disabled={currentPage1 === 1}
-                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-                >
-                  <Search size={16} className="rotate-180" />
-                </button>
-                <div className="flex gap-2">
-                  {[...Array(totalPages1)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage1(i + 1)}
-                      className={`w-10 h-10 rounded-lg font-bold transition-all ${currentPage1 === i + 1 ? "bg-sky-600 text-white shadow-lg" : "bg-white border text-gray-600 hover:bg-gray-50"}`}
+            {filtered.length > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4">
+                <div className="flex items-center gap-4">
+                  <p className="text-slate-500 text-sm font-medium">
+                    Showing {((currentPage1 - 1) * itemsPerPage) + 1} to {Math.min(currentPage1 * itemsPerPage, filtered.length)} of {filtered.length} entries
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage1(1);
+                      }}
+                      className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
                     >
-                      {i + 1}
-                    </button>
-                  ))}
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setCurrentPage1(p => Math.min(totalPages1, p + 1))}
-                  disabled={currentPage1 === totalPages1}
-                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-                >
-                  <Search size={16} />
-                </button>
+
+                {totalPages1 > 1 && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage1(p => Math.max(1, p - 1))}
+                      disabled={currentPage1 === 1}
+                      className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                    >
+                      <ChevronLeft size={20} className="text-slate-600" />
+                    </button>
+                    {[...Array(totalPages1)].map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage1(i + 1)}
+                        className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage1 === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setCurrentPage1(p => Math.min(totalPages1, p + 1))}
+                      disabled={currentPage1 === totalPages1}
+                      className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                    >
+                      <ChevronRight size={20} className="text-slate-600" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -338,10 +362,10 @@ export default function CreateProgram() {
                           </td>
                           <td className="p-4">
                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${prog.status === "Active"
-                                ? "bg-emerald-100 text-emerald-600 border border-emerald-200"
-                                : prog.status === "Inactive"
-                                  ? "bg-rose-100 text-rose-600 border border-rose-200"
-                                  : "bg-amber-100 text-amber-600 border border-amber-200"
+                              ? "bg-emerald-100 text-emerald-600 border border-emerald-200"
+                              : prog.status === "Inactive"
+                                ? "bg-rose-100 text-rose-600 border border-rose-200"
+                                : "bg-amber-100 text-amber-600 border border-amber-200"
                               }`}>
                               {prog.status === "Active" ? "Approved" : prog.status === "Inactive" ? "Rejected" : prog.status}
                             </span>
@@ -355,33 +379,57 @@ export default function CreateProgram() {
             </div>
 
             {/* Pagination Page 2 */}
-            {totalPages2 > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6">
-                <button
-                  onClick={() => setCurrentPage2(p => Math.max(1, p - 1))}
-                  disabled={currentPage2 === 1}
-                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-                >
-                  <Search size={16} className="rotate-180" />
-                </button>
-                <div className="flex gap-2">
-                  {[...Array(totalPages2)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage2(i + 1)}
-                      className={`w-10 h-10 rounded-lg font-bold transition-all ${currentPage2 === i + 1 ? "bg-sky-600 text-white shadow-lg" : "bg-white border text-gray-600 hover:bg-gray-50"}`}
+            {filteredPrograms.length > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4">
+                <div className="flex items-center gap-4">
+                  <p className="text-slate-500 text-sm font-medium">
+                    Showing {((currentPage2 - 1) * itemsPerPage) + 1} to {Math.min(currentPage2 * itemsPerPage, filteredPrograms.length)} of {filteredPrograms.length} entries
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage2(1);
+                      }}
+                      className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
                     >
-                      {i + 1}
-                    </button>
-                  ))}
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setCurrentPage2(p => Math.min(totalPages2, p + 1))}
-                  disabled={currentPage2 === totalPages2}
-                  className="p-2 border rounded-lg disabled:opacity-40 hover:bg-gray-50 transition-colors"
-                >
-                  <Search size={16} />
-                </button>
+
+                {totalPages2 > 1 && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage2(p => Math.max(1, p - 1))}
+                      disabled={currentPage2 === 1}
+                      className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                    >
+                      <ChevronLeft size={20} className="text-slate-600" />
+                    </button>
+                    {[...Array(totalPages2)].map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage2(i + 1)}
+                        className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage2 === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setCurrentPage2(p => Math.min(totalPages2, p + 1))}
+                      disabled={currentPage2 === totalPages2}
+                      className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                    >
+                      <ChevronRight size={20} className="text-slate-600" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

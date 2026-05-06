@@ -200,9 +200,9 @@ const Step1EventDetails = ({ formData, setFormData }) => {
               <label className="block text-sm font-semibold text-gray-700">
                 Include Program <span className="text-red-500">*</span>
               </label>
-              <div className="flex bg-gray-50 p-1 rounded-xl ring-1 ring-gray-200">
+              <div className="grid grid-cols-2 gap-3">
                 {["Yes", "No"].map((opt) => (
-                  <label key={opt} className="flex-1">
+                  <label key={opt} className="relative group cursor-pointer">
                     <input
                       type="radio"
                       name="includeProgram"
@@ -211,13 +211,7 @@ const Step1EventDetails = ({ formData, setFormData }) => {
                       checked={formData.eventDetails?.includeProgram === opt}
                       onChange={handleChange}
                     />
-                    <div
-                      className="text-center py-2 rounded-lg cursor-pointer transition-all 
-                      peer-checked:bg-[oklch(70.2%_0.183_293.541)] 
-                      peer-checked:text-white 
-                      peer-checked:shadow-sm 
-                      text-gray-500 text-sm font-medium"
-                    >
+                    <div className="bg-gray-50 ring-1 ring-gray-200 rounded-xl py-2.5 text-center text-xs font-semibold text-gray-500 transition-all peer-checked:ring-2 peer-checked:ring-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700">
                       {opt}
                     </div>
                   </label>
@@ -229,9 +223,9 @@ const Step1EventDetails = ({ formData, setFormData }) => {
               <label className="block text-sm font-semibold text-gray-700">
                 Visibility <span className="text-red-500">*</span>
               </label>
-              <div className="flex bg-gray-50 p-1 rounded-xl ring-1 ring-gray-200">
+              <div className="grid grid-cols-2 gap-3">
                 {["Public", "Private"].map((opt) => (
-                  <label key={opt} className="flex-1">
+                  <label key={opt} className="relative group cursor-pointer">
                     <input
                       type="radio"
                       name="visibility"
@@ -240,7 +234,7 @@ const Step1EventDetails = ({ formData, setFormData }) => {
                       checked={formData.eventDetails?.visibility === opt}
                       onChange={handleChange}
                     />
-                    <div className="text-center py-2 rounded-lg cursor-pointer transition-all peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm text-gray-500 text-sm font-medium">
+                    <div className="bg-gray-50 ring-1 ring-gray-200 rounded-xl py-2.5 text-center text-xs font-semibold text-gray-500 transition-all peer-checked:ring-2 peer-checked:ring-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700">
                       {opt}
                     </div>
                   </label>

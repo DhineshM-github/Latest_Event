@@ -12,7 +12,7 @@ const AdminApproval = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     fetchBookings();
@@ -167,10 +167,9 @@ const AdminApproval = () => {
                       <td className="px-4 py-4 text-center">
                         <button
                           onClick={() => handleView(booking.id)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+                          className="w-9 h-9 flex items-center justify-center mx-auto rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
                         >
                           <Eye size={16} />
-                          View
                         </button>
                       </td>
                       <td className="px-6 py-4">
@@ -229,40 +228,58 @@ const AdminApproval = () => {
         )}
       </div>
 
-      {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="flex gap-2">
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${
-                  currentPage === i + 1 
-                    ? "bg-sky-600 text-white shadow-lg shadow-sky-200" 
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
-                }`}
+      {/* Pagination Controls */}
+      {filteredBookings.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4 px-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-4">
+            <p className="text-slate-500 text-sm font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredBookings.length)} of {filteredBookings.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
               >
-                {i + 1}
-              </button>
-            ))}
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
           </div>
 
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronRight size={20} />
-          </button>
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronLeft size={20} className="text-slate-600" />
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronRight size={20} className="text-slate-600" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Eye, Search, Plus, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { getTasks, createTasks } from "../../Services/api";
 
 const fmtDate = (d) => {
@@ -36,6 +36,8 @@ function ListView({ onAdd }) {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [viewingTask, setViewingTask] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
 
   const fetchTasks = useCallback(async () => {
@@ -60,49 +62,43 @@ function ListView({ onAdd }) {
     (t.assigned_to || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  // Pagination Logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   return (
-    <div className="p-8 bg-gray-50 min-h-screen font-sans">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-1">To-Do Task</h1>
-          <p className="text-gray-500 font-medium tracking-wide">Manage and track your project milestones</p>
-        </div>
+    <div className="p-10 text-slate-800 bg-sky-50 min-h-screen w-full">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-sky-900">To-Do Task</h1>
         <button
           onClick={onAdd}
-          className="group flex items-center gap-2 bg-blue-600 px-6 py-3 rounded-2xl text-white font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-100"
+          className="bg-sky-600 px-4 py-2 rounded text-white flex gap-2 items-center hover:bg-sky-700 transition shadow-lg font-bold"
         >
-          <div className="bg-white/20 p-1 rounded-lg">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-              <rect x="9" y="3" width="2" height="14" rx="1" fill="currentColor" />
-              <rect x="3" y="9" width="14" height="2" rx="1" fill="currentColor" />
-            </svg>
-          </div>
+          <Plus size={18} />
           Add New Task
         </button>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-[0_10px_40px_rgb(0,0,0,0.02)] overflow-hidden">
-        <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <svg className="text-gray-400 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Search tasks, users, or lists..."
-              className="w-full bg-gray-50 border-none rounded-2xl pl-12 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-100 transition-all font-medium text-gray-700"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center gap-6 px-4">
-            <div className="text-center">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Tasks</div>
-              <div className="text-lg font-black text-slate-800">{filteredTasks.length}</div>
-            </div>
-          </div>
+      <div className="flex justify-start mb-6">
+        <div className="relative w-full max-w-sm group">
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-sky-500 transition-colors"
+          />
+          <input
+            placeholder="Search tasks, users, or lists..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full p-2 pl-10 rounded-lg bg-white text-slate-800 placeholder-slate-400 border border-sky-200 focus:ring-2 focus:ring-sky-500 outline-none shadow-sm text-sm"
+          />
         </div>
+      </div>
 
         {error && (
           <div className="m-6 flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl px-6 py-4 text-red-600">
@@ -110,74 +106,117 @@ function ListView({ onAdd }) {
           </div>
         )}
 
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <table className="w-full">
             <thead>
               <tr className="bg-sky-600 text-white">
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">Action</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">Task name</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">To-do list name</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">Start date</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">End date</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">Assigned to</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">Complete %</th>
-                <th className="px-6 py-4 text-left text-xs font-bold tracking-wider">Remarks</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Action</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Task name</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">To-do list name</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Start date</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">End date</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Assigned to</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Complete %</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Remarks</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr><td colSpan={9} className="text-center py-20"><div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mx-auto" /></td></tr>
-              ) : filteredTasks.length === 0 ? (
+              ) : currentTasks.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="text-center py-20">
-                    <div className="flex flex-col items-center gap-2 text-slate-300">
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="opacity-20"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                      <p className="font-bold text-lg">No Tasks Found</p>
+                    <div className="flex flex-col items-center gap-2 opacity-40">
+                      <Info size={40} />
+                      <p className="font-bold">No Tasks Found</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredTasks.map((t) => (
+                currentTasks.map((t) => (
                   <tr key={t.id} className="hover:bg-sky-50/50 transition-colors duration-200 group">
                     <td className="px-6 py-4">
                       <button 
                         onClick={() => setViewingTask(t)}
-                        className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all active:scale-90"
+                        className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
                         title="View Details"
                       >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                        <Eye size={20} />
                       </button>
                     </td>
 
-                    <td className="px-6 py-4 text-slate-800 font-bold">{t.task_name}</td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{t.todo_list_name}</td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-sm whitespace-nowrap">{fmtDate(t.start_date)}</td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-sm whitespace-nowrap">{fmtDate(t.end_date)}</td>
+                    <td className="px-6 py-4 text-sky-900 font-bold">{t.task_name}</td>
+                    <td className="px-6 py-4 text-slate-700 font-medium">{t.todo_list_name}</td>
+                    <td className="px-6 py-4 text-slate-600 font-mono text-sm whitespace-nowrap">{fmtDate(t.start_date)}</td>
+                    <td className="px-6 py-4 text-slate-600 font-mono text-sm whitespace-nowrap">{fmtDate(t.end_date)}</td>
                     <td className="px-6 py-4 text-slate-700 font-bold">{t.assigned_to}</td>
                     <td className="px-6 py-4"><StatusBadge status={t.status} /></td>
                     <td className="px-6 py-4"><PctBadge pct={t.complete_percent} /></td>
-                    <td className="px-6 py-4 text-slate-500 italic max-w-[180px] truncate">{t.remarks}</td>
+                    <td className="px-6 py-4 text-slate-600 italic max-w-[180px] truncate">{t.remarks}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-
-        <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex items-center justify-between">
-          <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">
-            Showing <span className="text-slate-800">{filteredTasks.length}</span> Records
-          </div>
-          <div className="flex items-center gap-1">
-            {["«", "‹", "1", "›", "»"].map((btn, i) => (
-              <button key={i} className={`w-8 h-8 flex items-center justify-center text-[10px] font-black border rounded-lg transition-all ${btn === "1" ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"}`}>
-                {btn}
-              </button>
-            ))}
-          </div>
       </div>
-    </div>
+
+      {/* PAGINATION */}
+      {filteredTasks.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4">
+          <div className="flex items-center gap-4">
+            <p className="text-slate-500 text-sm font-medium">
+              Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredTasks.length)} of {filteredTasks.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronLeft size={20} className="text-slate-600" />
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronRight size={20} className="text-slate-600" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Detail Modal */}
       {viewingTask && (

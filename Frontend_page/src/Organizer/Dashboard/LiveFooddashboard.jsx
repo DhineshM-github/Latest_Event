@@ -11,18 +11,18 @@ import {
   UserPlus
 } from "lucide-react";
 
-export const LiveFoodDashboard =()=> {
+export const LiveFoodDashboard = () => {
 
-  const [events,setEvents] = useState([]);
+  const [events, setEvents] = useState([]);
 
-  const [event,setEvent] = useState("");
-  const [mealTime,setMealTime] = useState("");
-  const [mealType,setMealType] = useState("");
+  const [event, setEvent] = useState("");
+  const [mealTime, setMealTime] = useState("");
+  const [mealType, setMealType] = useState("");
 
-  const [data,setData] = useState({
-    guests_inside:0,
-    total_capacity:0,
-    waiting_outside:0
+  const [data, setData] = useState({
+    guests_inside: 0,
+    total_capacity: 0,
+    waiting_outside: 0
   });
 
   // ------------------------
@@ -36,9 +36,9 @@ export const LiveFoodDashboard =()=> {
     setEvents(res.data);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     getEvents();
-  },[]);
+  }, []);
 
 
   // ------------------------
@@ -47,7 +47,7 @@ export const LiveFoodDashboard =()=> {
 
   const getFoodCount = async () => {
 
-     const res = await getFoodCount({
+    const res = await getFoodCount({
       event_id: event,
       meal_time: mealTime,
       meal_type: mealType
@@ -57,13 +57,13 @@ export const LiveFoodDashboard =()=> {
   };
 
 
-  useEffect(()=>{
+  useEffect(() => {
 
-    if(event && mealTime && mealType){
+    if (event && mealTime && mealType) {
       getFoodCount();
     }
 
-  },[event,mealTime,mealType]);
+  }, [event, mealTime, mealType]);
 
 
   // ------------------------
@@ -72,10 +72,11 @@ export const LiveFoodDashboard =()=> {
 
   const mealIcon = () => {
 
-    if(mealTime === "Breakfast") return <Coffee size={70}/>
-    if(mealTime === "Lunch") return <Utensils size={70}/>
-    if(mealTime === "Snacks") return <Pizza size={70}/>
-    if(mealTime === "Dinner") return <Moon size={70}/>
+    if (mealTime === "Breakfast") return <Coffee size={70} />
+    if (mealTime === "Lunch") return <Utensils size={70} />
+    if (mealTime === "Snacks") return <Pizza size={70} />
+    if (mealTime === "Dinner") return <Moon size={70} />
+    return <Store size={70} />;
   };
 
 
@@ -97,20 +98,20 @@ export const LiveFoodDashboard =()=> {
         {/* EVENT */}
 
         <select
-        className="p-3 border rounded w-60"
-        value={event}
-        onChange={(e)=>{
+          className="p-3 border rounded w-60"
+          value={event}
+          onChange={(e) => {
 
-          setEvent(e.target.value);
-          setMealTime("");
-          setMealType("");
+            setEvent(e.target.value);
+            setMealTime("");
+            setMealType("");
 
-        }}
+          }}
         >
 
           <option value="">Select Event</option>
 
-          {events.map((ev)=>(
+          {events.map((ev) => (
             <option key={ev.id} value={ev.id}>
               {ev.event_name}
             </option>
@@ -123,15 +124,15 @@ export const LiveFoodDashboard =()=> {
         {/* MEAL TIME */}
 
         <select
-        disabled={!event}
-        className="p-3 border rounded w-60 disabled:bg-gray-200"
-        value={mealTime}
-        onChange={(e)=>{
+          disabled={!event}
+          className="p-3 border rounded w-60 disabled:bg-gray-200"
+          value={mealTime}
+          onChange={(e) => {
 
-          setMealTime(e.target.value);
-          setMealType("");
+            setMealTime(e.target.value);
+            setMealType("");
 
-        }}
+          }}
         >
 
           <option value="">Select Meal Time</option>
@@ -147,10 +148,10 @@ export const LiveFoodDashboard =()=> {
         {/* MEAL TYPE */}
 
         <select
-        disabled={!mealTime}
-        className="p-3 border rounded w-60 disabled:bg-gray-200"
-        value={mealType}
-        onChange={(e)=>setMealType(e.target.value)}
+          disabled={!mealTime}
+          className="p-3 border rounded w-60 disabled:bg-gray-200"
+          value={mealType}
+          onChange={(e) => setMealType(e.target.value)}
         >
 
           <option value="">Select Meal Type</option>
@@ -176,7 +177,7 @@ export const LiveFoodDashboard =()=> {
           </h2>
 
           <div className="flex justify-center text-indigo-600">
-            <Users size={70}/>
+            <Users size={70} />
           </div>
 
           <p className="text-5xl font-bold mt-5">
@@ -216,7 +217,7 @@ export const LiveFoodDashboard =()=> {
           </h2>
 
           <div className="flex justify-center text-indigo-600">
-            <UserPlus size={70}/>
+            <UserPlus size={70} />
           </div>
 
           <p className="text-5xl font-bold mt-5">

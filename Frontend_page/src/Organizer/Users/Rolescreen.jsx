@@ -5,7 +5,7 @@ const RoleWiseScreenMapping = () => {
   const [roleName, setRoleName] = useState("");
   const [moduleName, setModuleName] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [pageSize, setPageSize] = useState("10");
+  const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [checkAll, setCheckAll] = useState(false);
   const [checkedRows, setCheckedRows] = useState([]);
@@ -183,14 +183,14 @@ const RoleWiseScreenMapping = () => {
                       </tr>
                     ) : (
                       filteredRows
-                        .slice((currentPage - 1) * Number(pageSize), currentPage * Number(pageSize))
+                        .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                         .map((row, index) => (
                           <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-200 group">
                             <td className="border-b border-[#e2e8f0] px-4 py-3 text-center">
                               <input
                                 type="checkbox"
-                                checked={checkedRows.includes((currentPage - 1) * Number(pageSize) + index)}
-                                onChange={() => handleRowCheck((currentPage - 1) * Number(pageSize) + index)}
+                                checked={checkedRows.includes((currentPage - 1) * pageSize + index)}
+                                onChange={() => handleRowCheck((currentPage - 1) * pageSize + index)}
                                 className="h-5 w-5 accent-[#4b6cb7]"
                               />
                             </td>
@@ -207,70 +207,60 @@ const RoleWiseScreenMapping = () => {
                 </table>
               </div>
 
-              {/* Footer / Pagination */}
-              <div className="flex flex-col items-center justify-between gap-4 border-t border-[#dfe5ee] px-4 py-4 text-[#6b7280] md:flex-row">
-                <div className="w-[80px]" />
-
-                <div className="flex flex-wrap items-center justify-center gap-2 text-[16px]">
-                  <span>
-                    Showing {filteredRows.length === 0 ? 0 : (currentPage - 1) * Number(pageSize) + 1} to{" "}
-                    {Math.min(currentPage * Number(pageSize), filteredRows.length)} of {filteredRows.length} entries
-                  </span>
-
-                  <div className="ml-2 flex items-center overflow-hidden rounded-md border border-[#eceff4] bg-[#f7f8fb]">
-                    <button 
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                      className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
-                    >
-                      <ChevronsLeft size={18} />
-                    </button>
-                    <button 
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                    <div className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] bg-blue-600 text-white font-bold text-sm">
-                      {currentPage}
+              {/* Pagination Controls */}
+              {filteredRows.length > 0 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <p className="text-slate-500 text-sm font-medium">
+                      Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredRows.length)} of {filteredRows.length} entries
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
                     </div>
-                    <button 
-                      onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredRows.length / Number(pageSize)), p + 1))}
-                      disabled={currentPage >= Math.ceil(filteredRows.length / Number(pageSize))}
-                      className="flex h-10 w-10 items-center justify-center border-r border-[#eceff4] text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                    <button 
-                      onClick={() => setCurrentPage(Math.ceil(filteredRows.length / Number(pageSize)))}
-                      disabled={currentPage >= Math.ceil(filteredRows.length / Number(pageSize))}
-                      className="flex h-10 w-10 items-center justify-center text-[#a0a7b4] hover:bg-white hover:text-[#4d6483] disabled:opacity-40"
-                    >
-                      <ChevronsRight size={18} />
-                    </button>
                   </div>
-                </div>
 
-                <div className="relative">
-                  <select
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="h-10 min-w-[92px] appearance-none rounded-md border border-[#d9e0ea] bg-[#f8fafc] px-3 pr-10 text-[16px] text-[#6b7280] outline-none"
-                  >
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                  </select>
-                  <ChevronDown
-                    size={18}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#7b8595]"
-                  />
+                  {Math.ceil(filteredRows.length / pageSize) > 1 && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                      >
+                        <ChevronLeft size={20} className="text-slate-600" />
+                      </button>
+                      {[...Array(Math.ceil(filteredRows.length / pageSize))].map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredRows.length / pageSize), p + 1))}
+                        disabled={currentPage === Math.ceil(filteredRows.length / pageSize)}
+                        className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                      >
+                        <ChevronRight size={20} className="text-slate-600" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
 
             </div>
           </div>

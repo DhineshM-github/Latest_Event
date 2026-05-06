@@ -27,7 +27,7 @@ export const Venuepage = () => {
   const { t } = useTranslation();
   const [venues, setVenues] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showForm, setShowForm] = useState(false);
   const [viewData, setViewData] = useState(null);
 
@@ -110,7 +110,7 @@ export const Venuepage = () => {
     try {
       const res = await getVenues();
 
-      setVenues(Array.isArray(res) ? res : []);
+      setVenues(Array.isArray(res) ? [...res].reverse() : []);
     } catch (error) {
       console.error("Error loading venues:", error);
       setVenues([]);
@@ -226,7 +226,6 @@ export const Venuepage = () => {
     if (!form.country) errors.country = "Country is required";
     if (!form.state) errors.state = "State is required";
     if (!form.city) errors.city = "City is required";
-    if (!form.venue_image) errors.venue_image = "Venue image is required";
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -346,107 +345,127 @@ export const Venuepage = () => {
       {/* TABLE */}
 
       <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-sky-600 text-white">
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Action</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Code</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Venue</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Address</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Status</th>
-            </tr>
-          </thead>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-sky-600 text-white">
+                <th className="px-10 py-4 text-left text-md font-bold text-white  tracking-wider">Action</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white  tracking-wider">Code</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Venue</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white  tracking-wider">Address</th>
+                <th className="px-6 py-4 text-left text-md font-bold text-white  tracking-wider">Status</th>
+              </tr>
+            </thead>
 
-          <tbody className="divide-y divide-slate-50">
-            {currentVenues.length > 0 ? (
-              currentVenues.map((v) => (
-                <tr key={v.id} className="hover:bg-sky-50/50 transition-colors duration-200 group">
+            <tbody className="divide-y divide-slate-50">
+              {currentVenues.length > 0 ? (
+                currentVenues.map((v) => (
+                  <tr key={v.id} className="hover:bg-sky-50/50 transition-colors duration-200 group">
 
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => viewVenue(v.id)}
-                        className="text-sky-600 hover:text-sky-800 transition-colors"
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => viewVenue(v.id)}
+                          className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
+                        >
+                          <Eye size={20} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(v.id)}
+                          className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                    </td>
+
+
+                    <td className="px-6 py-4 font-medium text-sky-900">{v.venue_code}</td>
+
+                    <td className="px-6 py-4 text-slate-700">{v.venue_name}</td>
+
+                    <td className="px-6 py-4 text-slate-600">{v.address}</td>
+
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${v.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                          }`}
                       >
-                        <Eye size={20} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(v.id)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        <Trash2 size={20} />
-                      </button>
+                        {v.status}
+                      </span>
+                    </td>
+
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 opacity-40">
+                      <Info size={40} />
+                      <p className="font-bold">No Venue found</p>
                     </div>
                   </td>
-
-
-                  <td className="px-6 py-4 font-medium text-sky-900">{v.venue_code}</td>
-
-                  <td className="px-6 py-4 text-slate-700">{v.venue_name}</td>
-
-                  <td className="px-6 py-4 text-slate-600">{v.address}</td>
-
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${v.status === "Active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                        }`}
-                    >
-                      {v.status}
-                    </span>
-                  </td>
-                  
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center gap-2 opacity-40">
-                    <Info size={40} />
-                    <p className="font-bold">No Venue found</p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="flex gap-2">
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${
-                  currentPage === i + 1 
-                    ? "bg-sky-600 text-white shadow-lg shadow-sky-200" 
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
-                }`}
+      {filteredVenues.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4">
+          <div className="flex items-center gap-4">
+            <p className="text-slate-500 text-sm font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredVenues.length)} of {filteredVenues.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
               >
-                {i + 1}
-              </button>
-            ))}
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
           </div>
 
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronRight size={20} />
-          </button>
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronLeft size={20} className="text-slate-600" />
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronRight size={20} className="text-slate-600" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -483,7 +502,7 @@ export const Venuepage = () => {
               {/* IMAGE UPLOAD */}
               <div className="bg-sky-50 px-6 py-4 rounded-xl border border-sky-100 shadow-sm w-full h-fit">
                 <h3 className="text-sm font-semibold mb-2 text-sky-700">
-                  Venue Image <span className="text-red-500">*</span>
+                  Venue Image
                 </h3>
 
                 <label
@@ -984,11 +1003,10 @@ export const Venuepage = () => {
         </div>
       )}
       {toast.show && (
-        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${
-          toast.type === "success" 
-            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200" 
-            : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
-        }`}>
+        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${toast.type === "success"
+          ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200"
+          : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
+          }`}>
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
             {toast.type === "success" ? "✓" : "!"}
           </div>

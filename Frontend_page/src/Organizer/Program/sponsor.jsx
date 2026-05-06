@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
   Eye,
   Pencil,
@@ -10,6 +10,8 @@ import {
   ArrowLeft,
   Upload,
   FileText,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const Sponsor = () => {
@@ -23,7 +25,8 @@ const Sponsor = () => {
 
   const [page, setPage] = useState("list"); // list | sponsorForm | accountForm | view
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [entries, setEntries] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [editId, setEditId] = useState(null);
   const [viewItem, setViewItem] = useState(null);
 
@@ -110,7 +113,15 @@ const Sponsor = () => {
     );
   }, [searchKeyword, sponsorList]);
 
-  const paginatedData = filteredSponsors.slice(0, entries);
+  const totalPages = Math.ceil(filteredSponsors.length / itemsPerPage);
+  const paginatedData = filteredSponsors.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword, itemsPerPage]);
 
   const resetAll = () => {
     setFormData({
@@ -347,11 +358,11 @@ const Sponsor = () => {
         prev.map((item) =>
           item.id === editId
             ? {
-                ...item,
-                ...formData,
-                modifiedBy: "Sakthi",
-                modifiedOn: getToday(),
-              }
+              ...item,
+              ...formData,
+              modifiedBy: "Sakthi",
+              modifiedOn: getToday(),
+            }
             : item
         )
       );
@@ -470,7 +481,7 @@ const Sponsor = () => {
               <div className="overflow-x-auto border border-[#d6dbe6]">
                 <table className="w-full">
                   <thead>
-            <tr className="bg-sky-600 text-white">
+                    <tr className="bg-sky-600 text-white">
                       <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                         Action
                       </th>
@@ -578,45 +589,60 @@ const Sponsor = () => {
                   </tbody>
                 </table>
 
-                <div className="flex flex-col items-center justify-between gap-3 bg-white px-4 py-3 md:flex-row">
-                  <div className="w-[200px]" />
-
-                  <div className="text-[15px] text-[#617493]">
-                    Showing {paginatedData.length > 0 ? 1 : 0} to{" "}
-                    {paginatedData.length} of {filteredSponsors.length} entries
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center overflow-hidden rounded-md border border-[#dfe4ec]">
-                      <button className="h-10 w-10 border-r border-[#dfe4ec] bg-[#f6f8fb] text-[#a8b2c0]">
-                        «
-                      </button>
-                      <button className="h-10 w-10 border-r border-[#dfe4ec] bg-[#f6f8fb] text-[#a8b2c0]">
-                        ‹
-                      </button>
-                      <button className="h-10 w-10 border-r border-[#dfe4ec] bg-[#4361ee] font-semibold text-white">
-                        1
-                      </button>
-                      <button className="h-10 w-10 border-r border-[#dfe4ec] bg-[#f6f8fb] text-[#a8b2c0]">
-                        ›
-                      </button>
-                      <button className="h-10 w-10 bg-[#f6f8fb] text-[#a8b2c0]">
-                        »
-                      </button>
+                {/* Pagination Controls */}
+                {filteredSponsors.length > 0 && (
+                  <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-4 py-3 bg-white">
+                    <div className="flex items-center gap-4">
+                      <p className="text-slate-500 text-sm font-medium">
+                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredSponsors.length)} of {filteredSponsors.length} entries
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                        <select
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+                        >
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
                     </div>
 
-                    <select
-                      value={entries}
-                      onChange={(e) => setEntries(Number(e.target.value))}
-                      className="h-10 rounded-md border border-[#d7dce6] bg-[#f7f8fb] px-4 text-[15px] text-[#546887] outline-none"
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
+                    {totalPages > 1 && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                        >
+                          <ChevronLeft size={20} className="text-slate-600" />
+                        </button>
+                        {[...Array(totalPages)].map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setCurrentPage(i + 1)}
+                            className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                        >
+                          <ChevronRight size={20} className="text-slate-600" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -726,11 +752,10 @@ const Sponsor = () => {
                   Address <span className="text-red-500">*</span>
                 </label>
                 <textarea
-                  className={`min-h-[112px] w-full rounded-md bg-white px-4 py-3 text-[15px] text-[#445a7b] outline-none placeholder:text-[#7b8ca8] ${
-                    errors.address
-                      ? "border border-red-500 focus:border-red-500"
-                      : "border border-[#cfd6e4] focus:border-[#8aa5e6]"
-                  }`}
+                  className={`min-h-[112px] w-full rounded-md bg-white px-4 py-3 text-[15px] text-[#445a7b] outline-none placeholder:text-[#7b8ca8] ${errors.address
+                    ? "border border-red-500 focus:border-red-500"
+                    : "border border-[#cfd6e4] focus:border-[#8aa5e6]"
+                    }`}
                   placeholder="Enter Address"
                   value={formData.address}
                   onChange={(e) => updateField("address", e.target.value)}
@@ -870,7 +895,7 @@ const Sponsor = () => {
               <div className="overflow-x-auto border border-[#d6dbe6]">
                 <table className="w-full">
                   <thead>
-            <tr className="bg-sky-600 text-white">
+                    <tr className="bg-sky-600 text-white">
                       <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                         Action
                       </th>

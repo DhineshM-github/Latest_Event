@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Eye, Plus, X, CheckCircle, AlertCircle, Info, Trash2 } from "lucide-react";
+import { Eye, Plus, X, CheckCircle, AlertCircle, Info, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { getVendors, createVendor, getVendorById, deleteVendor } from "../../Services/api";
@@ -9,7 +9,7 @@ export const VendorPage = () => {
   const [vendors, setVendors] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [viewData, setViewData] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const [fullPreview, setFullPreview] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
@@ -48,18 +48,12 @@ export const VendorPage = () => {
     loadVendors();
   }, []);
 
-  // Auto-close toast after 5 seconds
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   // ================= TOAST NOTIFICATION =================
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
+  const showNotification = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 3000);
   };
   // ================= LOAD =================
 
@@ -149,7 +143,7 @@ export const VendorPage = () => {
 
     const lastDoc = documents[documents.length - 1];
     if (lastDoc && !lastDoc.document_file) {
-      showToast("Please upload the file for the current document before adding another", "error");
+      showNotification("Please upload the file for the current document before adding another", "error");
       return;
     }
 
@@ -232,7 +226,7 @@ export const VendorPage = () => {
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      showToast("Please fill all mandatory fields", "error");
+      showNotification("Please fill all mandatory fields", "error");
       return;
     }
 
@@ -240,15 +234,15 @@ export const VendorPage = () => {
     for (let i = 0; i < documents.length; i++) {
       const doc = documents[i];
       if (doc.document_type === "Aadhar" && doc.document_number.length !== 12) {
-        showToast(`Document ${i + 1}: Aadhar must be exactly 12 digits`, "error");
+        showNotification(`Document ${ i + 1 }: Aadhar must be exactly 12 digits`, "error");
         return;
       }
       if (doc.document_type === "PAN" && doc.document_number.length !== 10) {
-        showToast(`Document ${i + 1}: PAN must be exactly 10 characters`, "error");
+        showNotification(`Document ${ i + 1 }: PAN must be exactly 10 characters`, "error");
         return;
       }
       if (!doc.document_file) {
-        showToast(`Document ${i + 1}: Please upload the document file`, "error");
+        showNotification(`Document ${ i + 1 }: Please upload the document file`, "error");
         return;
       }
     }
@@ -262,12 +256,12 @@ export const VendorPage = () => {
         ),
       });
 
-      showToast("✓ Vendor Created Successfully!", "success");
+      showNotification("Vendor Created Successfully!", "success");
       setShowForm(false);
       resetForm();
       loadVendors();
     } catch (error) {
-      showToast("Failed to create vendor", "error");
+      showNotification("Failed to create vendor", "error");
     } finally {
       setLoading(false);
     }
@@ -297,11 +291,11 @@ export const VendorPage = () => {
     try {
       setLoading(true);
       await deleteVendor(id);
-      showToast("✓ Vendor Deleted Successfully!", "success");
+      showNotification("Vendor Deleted Successfully!", "success");
       setDeleteModal({ isOpen: false, id: null });
       loadVendors();
     } catch (error) {
-      showToast("Failed to delete vendor", "error");
+      showNotification("Failed to delete vendor", "error");
       setDeleteModal({ isOpen: false, id: null });
     } finally {
       setLoading(false);
@@ -310,7 +304,7 @@ export const VendorPage = () => {
 
   // ================= SEARCH & PAGINATION =================
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredVendors = vendors.filter(
     (v) =>
@@ -329,25 +323,15 @@ export const VendorPage = () => {
 
   return (
     <div className="p-10 text-slate-800 bg-sky-50 min-h-screen w-full">
-      {toast && (
-        <div
-          className={`fixed top-5 right-5 flex items-center gap-3 px-6 py-4 rounded-lg shadow-2xl z-[9999] animate-in fade-in slide-in-from-top ${toast.type === "success"
-            ? "bg-sky-600 border border-sky-500"
-            : "bg-red-600 border border-red-500"
-            }`}
-        >
-          {toast.type === "success" ? (
-            <CheckCircle size={24} className="text-white flex-shrink-0" />
-          ) : (
-            <AlertCircle size={24} className="text-white flex-shrink-0" />
-          )}
-          <span className="text-white font-medium">{toast.message}</span>
-          <button
-            onClick={() => setToast(null)}
-            className="ml-2 text-white hover:text-gray-200 transition"
-          >
-            <X size={18} />
-          </button>
+      {toast.show && (
+        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${toast.type === "success"
+            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200"
+            : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
+          }`}>
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+            {toast.type === "success" ? "✓" : "!"}
+          </div>
+          <p className="font-bold text-sm tracking-wide">{toast.message}</p>
         </div>
       )}
 
@@ -384,15 +368,16 @@ export const VendorPage = () => {
       {/* TABLE */}
 
       <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-sky-600 text-white">
-<th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Action</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Name</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Contact</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Email</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Address</th>
-              <th className="px-3 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Status</th>
+              <th className="px-10 py-4 text-left text-md font-bold text-white tracking-wider">Action</th>
+              <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Name</th>
+              <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Contact</th>
+              <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Email</th>
+              <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">Address</th>
+              <th className="px-3 py-3 text-left text-md font-bold text-white tracking-wider">Status</th>
               
             </tr>
           </thead>
@@ -404,14 +389,14 @@ export const VendorPage = () => {
                   <td className="px-6 py-4 flex gap-3">
                     <button
                       onClick={() => viewVendor(v.id)}
-                      className="text-sky-600 hover:text-sky-800 transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
                       title="View"
                     >
                       <Eye size={20} />
                     </button>
                     <button
                       onClick={() => setDeleteModal({ isOpen: true, id: v.id })}
-                      className="text-red-500 hover:text-red-700 transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
                       title="Delete"
                     >
                       <Trash2 size={20} />
@@ -450,44 +435,61 @@ export const VendorPage = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-6">
-          <p className="text-gray-500 text-sm">
-            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredVendors.length)} of {filteredVendors.length} entries
-          </p>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-sky-50 disabled:opacity-40 transition-all font-semibold text-sky-600"
-            >
-              Previous
-            </button>
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-10 h-10 rounded-lg font-bold transition-all ${
-                  currentPage === i + 1 
-                    ? "bg-sky-600 text-white shadow-lg" 
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
-                }`}
+      {filteredVendors.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4">
+          <div className="flex items-center gap-4">
+            <p className="text-slate-500 text-sm font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredVendors.length)} of {filteredVendors.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
               >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-sky-50 disabled:opacity-40 transition-all font-semibold text-sky-600"
-            >
-              Next
-            </button>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronLeft size={20} className="text-slate-600" />
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronRight size={20} className="text-slate-600" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

@@ -23,7 +23,7 @@ export const PolicyPage = () => {
   const [policies, setPolicies] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
   const [showForm, setShowForm] = useState(false);
   const [viewData, setViewData] = useState(null);
@@ -190,11 +190,10 @@ export const PolicyPage = () => {
       {/* TOAST */}
       {/* TOAST NOTIFICATION */}
       {popup.show && (
-        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${
-          popup.type === "success" 
-            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200" 
+        <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${popup.type === "success"
+            ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200"
             : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
-        }`}>
+          }`}>
           <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
             {popup.type === "success" ? "✓" : "!"}
           </div>
@@ -245,26 +244,26 @@ export const PolicyPage = () => {
             <thead>
               <tr className="bg-sky-600 text-white">
 
-                <th className="px-6 py-4 text-center text-sm font-bold text-white tracking-wider">
+                <th className="px-6 py-4 text-center text-md font-bold text-white tracking-wider">
                   Action
                 </th>
 
-                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">
                   Policy Code
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">
                   Policy Name
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
+                <th className="px-6 py-4 text-left text-md font-bold text-white tracking-wider">
                   Group
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider">
+                <th className="px-8 py-4 text-left text-md font-bold text-white tracking-wider">
                   Status
                 </th>
-                
+
               </tr>
             </thead>
 
@@ -324,7 +323,7 @@ export const PolicyPage = () => {
                         {p.status}
                       </span>
                     </td>
-                    
+
                   </tr>
                 ))
               ) : (
@@ -343,39 +342,57 @@ export const PolicyPage = () => {
       </div>
 
       {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-8 mb-12">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="flex gap-2">
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${
-                  currentPage === i + 1 
-                    ? "bg-sky-600 text-white shadow-lg shadow-sky-200" 
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"
-                }`}
+      {filteredPolicies.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4">
+          <div className="flex items-center gap-4">
+            <p className="text-slate-500 text-sm font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredPolicies.length)} of {filteredPolicies.length} entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
               >
-                {i + 1}
-              </button>
-            ))}
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
           </div>
 
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
-          >
-            <ChevronRight size={20} />
-          </button>
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronLeft size={20} className="text-slate-600" />
+              </button>
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+              >
+                <ChevronRight size={20} className="text-slate-600" />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -411,18 +428,17 @@ export const PolicyPage = () => {
                     Policy Name <span className="text-red-500">*</span>
                   </label>
                   <input
-  name="policy_name"
-  value={form.policy_name}
-  onChange={handleChange}
-  maxLength={20}
-  className={`w-full p-4 border-2 rounded-2xl focus:ring-4 transition-all outline-none ${
-    fieldErrors.policy_name
-      ? "border-red-200 bg-red-50 focus:ring-red-100 focus:border-red-400"
-      : "border-slate-100 bg-slate-50 focus:ring-blue-50 focus:border-blue-500"
-  }`}
-  placeholder="e.g. Early Bird Policy"
-  required
-/>
+                    name="policy_name"
+                    value={form.policy_name}
+                    onChange={handleChange}
+                    maxLength={20}
+                    className={`w-full p-4 border-2 rounded-2xl focus:ring-4 transition-all outline-none ${fieldErrors.policy_name
+                        ? "border-red-200 bg-red-50 focus:ring-red-100 focus:border-red-400"
+                        : "border-slate-100 bg-slate-50 focus:ring-blue-50 focus:border-blue-500"
+                      }`}
+                    placeholder="e.g. Early Bird Policy"
+                    required
+                  />
                   {fieldErrors.policy_name && (
                     <p className="text-red-500 text-xs font-bold ml-1">
                       {fieldErrors.policy_name}

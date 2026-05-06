@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { getAbstract } from "../../Services/api";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 function parseDate(d) {
   const [dd, mm, yy] = d.split("/");
@@ -151,63 +151,59 @@ export const AbstractVerification = () => {
           </table>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginTop: 16,
-            fontSize: 13,
-            color: "#64748b",
-          }}
-        >
-          <span style={{ flex: 1 }}>
-            Showing {filtered.length === 0 ? 0 : startIndex + 1} to{" "}
-            {Math.min(startIndex + perPage, filtered.length)} of{" "}
-            {filtered.length} entries
-          </span>
-
-          <div style={{ display: "flex", gap: 4 }}>
-            {[["«", 1], ["‹", page - 1], [page, page], ["›", page + 1], ["»", totalPages]].map(
-              ([label, p], idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setPage(p)}
-                  disabled={p < 1 || p > totalPages || p === page}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    border: "1px solid #d1d5db",
-                    borderRadius: 6,
-                    background: p === page ? "#2563EB" : "#fff",
-                    color: p === page ? "#fff" : "#64748b",
-                    cursor: "pointer",
+        {filtered.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4">
+            <div className="flex items-center gap-4">
+              <p className="text-slate-500 text-sm font-medium">
+                Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, filtered.length)} of {filtered.length} entries
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                <select
+                  value={perPage}
+                  onChange={(e) => {
+                    setPerPage(Number(e.target.value));
+                    setPage(1);
                   }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
                 >
-                  {label}
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronLeft size={20} className="text-slate-600" />
                 </button>
-              )
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-10 h-10 rounded-xl font-bold transition-all ${page === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronRight size={20} className="text-slate-600" />
+                </button>
+              </div>
             )}
           </div>
-
-          <select
-            value={perPage}
-            onChange={(e) => {
-              setPerPage(+e.target.value);
-              setPage(1);
-            }}
-            style={{
-              height: 32,
-              padding: "0 8px",
-              border: "1px solid #d1d5db",
-              borderRadius: 6,
-            }}
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
+        )}
       </div>
     </div>
   );

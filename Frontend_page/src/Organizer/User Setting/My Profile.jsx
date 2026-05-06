@@ -16,7 +16,7 @@ const MyProfile = () => {
 
 
   const userId = sessionStorage.getItem("userId") || sessionStorage.getItem("User_id") || sessionStorage.getItem("id");
-  
+
   const [countries, setCountries] = useState([]);
   const [statesList, setStatesList] = useState([]);
   const [citiesList, setCitiesList] = useState([]);
@@ -142,7 +142,7 @@ const MyProfile = () => {
           city: data.city || "",
           profile_image: data.profile_image || ""
         });
-        
+
         setCountrySearch(data.country || "");
         setStateSearch(data.state || "");
         setCitySearch(data.city || "");
@@ -184,7 +184,7 @@ const MyProfile = () => {
       const res = await updateUserProfile(formData);
       if (res.status === "success") {
         setMessage({ type: "success", text: "Profile updated successfully!" });
-        
+
         // 🔥 Instant sync with Redux & Header
         sessionStorage.setItem("name", formData.name);
         sessionStorage.setItem("profile_image", formData.profile_image);
@@ -231,9 +231,8 @@ const MyProfile = () => {
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-lg active:scale-95 ${
-            saving ? "bg-slate-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30"
-          }`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all shadow-lg active:scale-95 ${saving ? "bg-slate-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30"
+            }`}
         >
           {saving ? <div className="animate-spin h-5 w-5 border-b-2 border-white rounded-full"></div> : <FaSave size={20} />}
           {saving ? "Saving..." : "Save Profile"}
@@ -241,23 +240,22 @@ const MyProfile = () => {
       </div>
 
       {message.text && (
-        <div className={`mb-6 p-4 rounded-xl font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${
-          message.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"
-        }`}>
+        <div className={`mb-6 p-4 rounded-xl font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${message.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"
+          }`}>
           {message.text}
         </div>
       )}
 
       {/* GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* PROFILE PICTURE CARD */}
         <div className="lg:col-span-4 bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-8 flex flex-col items-center text-center">
           <h2 className="text-xl font-bold text-slate-800 self-start mb-8 flex items-center gap-2">
             <span className="w-2 h-6 bg-blue-600 rounded-full"></span>
             Profile Photo
           </h2>
-          
+
           <div className="relative group">
             <div className="w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-50 flex items-center justify-center">
               {profileImage ? (
@@ -280,7 +278,7 @@ const MyProfile = () => {
 
         {/* DETAILS SECTION */}
         <div className="lg:col-span-8 flex flex-col gap-8">
-          
+
           {/* PERSONAL INFO */}
           <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
             <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
@@ -301,12 +299,20 @@ const MyProfile = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-500 mb-2 ml-1">Contact Number *</label>
+                <label className="block text-sm font-bold text-slate-500 mb-2 ml-1">Contact Number  <span className="text-red-500">*</span></label>
                 <input
                   name="mobile"
                   value={formData.mobile}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    // Allow only digits and optional '+' at start
+                    if (/^\+?\d*$/.test(value)) {
+                      handleChange(e);
+                    }
+                  }}
                   placeholder="e.g. +91 98765 43210"
+                  maxLength={13} // +91 + 10 digits
                   className="w-full bg-slate-50 border border-slate-200 px-5 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 outline-none transition-all font-bold text-slate-800"
                 />
               </div>
@@ -333,7 +339,7 @@ const MyProfile = () => {
 
             <div className="space-y-8">
               <div>
-                <label className="block text-sm font-bold text-slate-500 mb-2 ml-1">Work/Home Address *</label>
+                <label className="block text-sm font-bold text-slate-500 mb-2 ml-1">Work/Home Address</label>
                 <textarea
                   name="address"
                   value={formData.address}

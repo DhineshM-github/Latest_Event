@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   User,
   Rocket,
@@ -18,13 +18,15 @@ import {
   List,
   Menu,
 } from "lucide-react";
-import { Eye } from "lucide-react";
+import { Eye, CheckCircle, AlertCircle, Trash2, ShieldCheck, ShieldX, History } from "lucide-react";
 import MediaRenderer from "../components/MediaRenderer";
 
+import { useLocation } from "react-router-dom";
 import {
   getAllEvents,
   updateEventStatus,
   getFullEventDetails,
+  deleteEvent,
 } from "../Services/api";
 
 /* 🎨 ENHANCED IMAGE SLIDER */
@@ -459,6 +461,7 @@ const StepContent = ({ step, fullData }) => {
 };
 
 const SuperUserEvents = () => {
+  const menuRef = useRef(null);
   const [events, setEvents] = useState([]);
   const [openMenu, setOpenMenu] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -469,11 +472,41 @@ const SuperUserEvents = () => {
   const [showViewMenu, setShowViewMenu] = useState(false);
   const [docPreview, setDocPreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [toast, setToast] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.fromLogin) {
+      setToast({ message: "Login Successful! Welcome to SuperUser Page", type: "success" });
+      // Optional: clear state to prevent toast showing on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Auto-close toast
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
 
 
   useEffect(() => {
     fetchEvents();
+  }, []);
+
+  // Click away listener for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const fetchEvents = async () => {
@@ -586,8 +619,67 @@ const SuperUserEvents = () => {
     }
   };
 
+  const handleDelete = (id) => {
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const executeDelete = async () => {
+    try {
+      const res = await deleteEvent(deleteConfirm.id);
+      if (res?.success || res?.message === "Event deleted successfully") {
+        setPopup({
+          show: true,
+          message: "Event deleted successfully 🗑️",
+          type: "success",
+        });
+        fetchEvents();
+      } else {
+        setPopup({
+          show: true,
+          message: "Failed to delete event ❌",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setPopup({ show: true, message: "Server error ❌", type: "error" });
+    } finally {
+      setDeleteConfirm({ show: false, id: null });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-blue-50 p-8">
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl z-[9999] animate-slide-in border-l-4 ${toast.type === "success"
+            ? "bg-white border-emerald-500"
+            : "bg-white border-rose-500"
+            }`}
+        >
+          <div className={`p-2 rounded-xl ${toast.type === "success" ? "bg-emerald-100" : "bg-rose-100"}`}>
+            {toast.type === "success" ? (
+              <CheckCircle size={20} className="text-emerald-600" />
+            ) : (
+              <AlertCircle size={20} className="text-rose-600" />
+            )}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-slate-800 font-bold text-sm tracking-tight">
+              {toast.type === "success" ? "Success" : "Notification"}
+            </span>
+            <span className="text-slate-500 text-xs font-medium">{toast.message}</span>
+          </div>
+          <button
+            onClick={() => setToast(null)}
+            className="ml-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* HEADER */}
       <div className="mb-12 flex items-center justify-between">
         <div>
@@ -725,42 +817,78 @@ const SuperUserEvents = () => {
                 </div>
               </div>
 
-              {/* 3 DOT MENU (Visible in Grid View) */}
+               {/* 3 DOT MENU (Visible in Grid View) */}
               {!(viewMode === "list" || viewMode === "details") && (
-                <div className="relative">
+                <div className="relative" ref={openMenu === e.id ? menuRef : null}>
                   <button
-                    onClick={() => setOpenMenu(openMenu === e.id ? null : e.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setOpenMenu(openMenu === e.id ? null : e.id);
+                    }}
+                    id={e.id}
                     className="p-1 hover:bg-gray-100 rounded-lg transition text-gray-600 hover:text-teal-600"
                   >
                     <MoreVertical size={viewMode === "compact" ? 16 : 20} />
                   </button>
 
                   {openMenu === e.id && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white border-2 border-gray-200 rounded-2xl shadow-xl z-10 overflow-hidden">
+                    <div className="absolute right-0 mt-3 w-52 bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl z-50 overflow-hidden p-2 animate-fade-in ring-1 ring-black/5">
+                      <div className="px-3 py-1 mb-1">
+                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Event Actions</p>
+                      </div>
+                      
                       <button
                         onClick={() => handleView(e.id)}
-                        className="w-full text-left px-4 py-3 hover:bg-teal-50 text-gray-900 font-medium transition flex items-center gap-2"
+                        className="w-full text-left px-4 py-2.5 hover:bg-teal-50 text-teal-700 font-semibold rounded-2xl transition-all duration-300 flex items-center gap-3 group"
                       >
-                        <Eye size={18} strokeWidth={2} /> View Details
+                        <div className="w-8 h-8 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center transition-colors">
+                          <Eye size={18} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-sm">View Details</span>
                       </button>
-                      <div className="border-t border-gray-200"></div>
+
+                      <div className="h-px bg-gray-100 my-2 mx-2"></div>
+
                       <button
                         onClick={() => handleStatus(e.id, "APPROVED")}
-                        className="w-full text-left px-4 py-3 hover:bg-emerald-50 text-emerald-700 font-medium transition flex items-center gap-2"
+                        className="w-full text-left px-4 py-2.5 hover:bg-emerald-50 text-emerald-700 font-semibold rounded-2xl transition-all duration-300 flex items-center gap-3 group"
                       >
-                        ✅ Approve
+                        <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center transition-colors">
+                          <ShieldCheck size={18} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-sm">Approve</span>
                       </button>
+
                       <button
                         onClick={() => handleStatus(e.id, "REJECTED")}
-                        className="w-full text-left px-4 py-3 hover:bg-red-50 text-red-700 font-medium transition flex items-center gap-2"
+                        className="w-full text-left px-4 py-2.5 hover:bg-rose-50 text-rose-700 font-semibold rounded-2xl transition-all duration-300 flex items-center gap-3 group"
                       >
-                        ❌ Reject
+                        <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center transition-colors">
+                          <ShieldX size={18} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-sm">Reject</span>
                       </button>
+
                       <button
                         onClick={() => handleStatus(e.id, "PENDING")}
-                        className="w-full text-left px-4 py-3 hover:bg-yellow-50 text-yellow-700 font-medium transition flex items-center gap-2"
+                        className="w-full text-left px-4 py-2.5 hover:bg-amber-50 text-amber-700 font-semibold rounded-2xl transition-all duration-300 flex items-center gap-3 group"
                       >
-                        ⏳ Pending
+                        <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center transition-colors">
+                          <History size={18} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-sm">Pending</span>
+                      </button>
+
+                      <div className="h-px bg-gray-100 my-2 mx-2"></div>
+
+                      <button
+                        onClick={() => handleDelete(e.id)}
+                        className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-red-600 font-semibold rounded-2xl transition-all duration-300 flex items-center gap-3 group"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center transition-colors">
+                          <Trash2 size={18} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-sm">Delete Event</span>
                       </button>
                     </div>
                   )}
@@ -909,27 +1037,34 @@ const SuperUserEvents = () => {
 
             {/* Actions for List View */}
             {(viewMode === "list" || viewMode === "details") && (
-              <div className="flex items-center gap-2 ml-auto pr-4 border-l border-gray-100 pl-4 h-full">
+              <div className="flex items-center gap-3 ml-auto pr-6 border-l border-gray-100 pl-6 h-full">
                 <button
                   onClick={() => handleView(e.id)}
-                  className="p-2 bg-teal-50 text-teal-600 rounded-xl hover:bg-teal-100 transition"
+                  className="w-10 h-10 flex items-center justify-center bg-teal-50 text-teal-600 rounded-2xl hover:bg-teal-100 transition-all duration-300 shadow-sm"
                   title="View Details"
                 >
-                  <Eye size={18} strokeWidth={2} /> 
+                  <Eye size={20} strokeWidth={2.5} /> 
                 </button>
                 <button
                   onClick={() => handleStatus(e.id, "APPROVED")}
-                  className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition"
+                  className="w-10 h-10 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all duration-300 shadow-sm"
                   title="Approve"
                 >
-                  ✅
+                  <ShieldCheck size={20} strokeWidth={2.5} />
                 </button>
                 <button
                   onClick={() => handleStatus(e.id, "REJECTED")}
-                  className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition"
+                  className="w-10 h-10 flex items-center justify-center bg-rose-50 text-rose-600 rounded-2xl hover:bg-rose-100 transition-all duration-300 shadow-sm"
                   title="Reject"
                 >
-                  ❌
+                  <ShieldX size={20} strokeWidth={2.5} />
+                </button>
+                <button
+                  onClick={() => handleDelete(e.id)}
+                  className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-all duration-300 shadow-sm"
+                  title="Delete"
+                >
+                  <Trash2 size={20} strokeWidth={2.5} />
                 </button>
               </div>
             )}
@@ -998,20 +1133,6 @@ const SuperUserEvents = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex bg-white/50 backdrop-blur-md p-1 rounded-2xl shadow-inner border border-white/50">
-                    <button
-                      onClick={() => handleStatus(selectedEvent, "APPROVED")}
-                      className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-emerald-600 transition-all active:scale-95 flex items-center gap-2"
-                    >
-                      ✅ Approve
-                    </button>
-                    <button
-                      onClick={() => handleStatus(selectedEvent, "REJECTED")}
-                      className="px-6 py-2 ml-2 bg-rose-500 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-rose-600 transition-all active:scale-95 flex items-center gap-2"
-                    >
-                      ❌ Reject
-                    </button>
-                  </div>
                   <button
                     onClick={closeModal}
                     className="p-2 hover:bg-gray-200 rounded-full transition text-gray-600 hover:text-red-600 ml-4"
@@ -1142,6 +1263,21 @@ const SuperUserEvents = () => {
           animation: fade-in 0.6s ease-out forwards;
         }
 
+        @keyframes slide-in {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-slide-in {
+          animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
         .animate-scroll {
           animation: scroll 8s linear infinite;
         }
@@ -1178,6 +1314,42 @@ const SuperUserEvents = () => {
             >
               Dismiss
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[110] p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md border border-red-100 overflow-hidden relative">
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+            
+            <div className="relative">
+              <div className="w-20 h-20 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-lg shadow-red-100">
+                🗑️
+              </div>
+              
+              <h2 className="text-3xl font-bold text-gray-900 mb-3 text-center">Delete Event?</h2>
+              <p className="text-gray-600 mb-8 text-center leading-relaxed">
+                Are you sure you want to delete this event? This action cannot be undone and all associated data will be lost.
+              </p>
+              
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setDeleteConfirm({ show: false, id: null })}
+                  className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition-all active:scale-95 shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeDelete}
+                  className="flex-1 py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-red-200 transition-all active:scale-95"
+                >
+                  Delete Now
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

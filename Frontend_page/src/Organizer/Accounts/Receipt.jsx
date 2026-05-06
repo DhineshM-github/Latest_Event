@@ -5,7 +5,7 @@ export const Receipt = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState([]); // Placeholder for actual data
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Pagination Logic
   const filteredData = data.filter(item =>
@@ -199,37 +199,57 @@ export const Receipt = () => {
         </div>
 
         {/* PAGINATION */}
-        {totalPages > 1 && (
-          <div className="flex justify-between items-center mt-8">
-            <p className="text-slate-400 text-sm font-medium italic">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
-            </p>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 disabled:opacity-40 transition-all shadow-sm"
-              >
-                <ChevronLeft size={20} className="text-slate-600" />
-              </button>
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-blue-600 text-white shadow-lg shadow-blue-100" : "bg-white text-slate-600 border border-slate-200 hover:bg-blue-50"}`}
+        {filteredData.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
+            <div className="flex items-center gap-4">
+              <p className="text-slate-500 text-sm font-medium">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
                 >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 disabled:opacity-40 transition-all shadow-sm"
-              >
-                <ChevronRight size={20} className="text-slate-600" />
-              </button>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronLeft size={20} className="text-slate-600" />
+                </button>
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronRight size={20} className="text-slate-600" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

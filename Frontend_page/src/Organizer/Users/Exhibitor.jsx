@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getExhibitorBookings } from "../../Services/api";
-import { Search, Download, ListFilter, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, Download, ListFilter, RefreshCw, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react"
 
 /* ─── Status badge mapping ─────────────────────────────────────────────────── */
 const BADGE_STYLES = {
@@ -147,7 +147,7 @@ export default function ExhibitorTable() {
               <thead>
                 <tr className="bg-sky-600 text-white">
                   {COLUMNS.map(col => (
-                    <th key={col.key} className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider whitespace-nowrap">
+                    <th key={col.key} className="px-6 py-4 text-left text-sm font-bold text-white tracking-wider whitespace-nowrap">
                       {col.label}
                     </th>
                   ))}
@@ -196,42 +196,57 @@ export default function ExhibitorTable() {
             </table>
           </div>
 
-          {/* Pagination Footer */}
-          <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex items-center justify-between">
-            <div className="text-[11px] text-slate-500 font-medium">
-              Showing <span className="text-slate-800 font-bold">{fromEntry}</span> to <span className="text-slate-800 font-bold">{toEntry}</span> of <span className="text-slate-800 font-bold">{total}</span> records
-            </div>
-
+          {/* Pagination Controls */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 mr-4">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Per Page</span>
+              <p className="text-slate-500 text-sm font-medium">
+                Showing {fromEntry} to {toEntry} of {total} entries
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-sm font-medium">Records per page:</span>
                 <select
                   value={pageSize}
-                  onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                  className="bg-white border border-slate-200 rounded-lg text-xs p-1.5 outline-none font-bold text-slate-600 focus:ring-2 focus:ring-blue-500/10"
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
                 >
-                  {[10, 25, 50].map(n => <option key={n} value={n}>{n}</option>)}
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
                 </select>
               </div>
+            </div>
 
-              <div className="flex items-center gap-1">
-                {[
-                  { icon: "<<", fn: () => setPage(1), disabled: safePage === 1 },
-                  { icon: "<", fn: () => setPage(p => Math.max(1, p - 1)), disabled: safePage === 1 },
-                  { icon: ">", fn: () => setPage(p => Math.min(totalPages, p + 1)), disabled: safePage === totalPages },
-                  { icon: ">>", fn: () => setPage(totalPages), disabled: safePage === totalPages },
-                ].map((btn, bIdx) => (
+            {totalPages > 1 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronLeft size={20} className="text-slate-600" />
+                </button>
+                {[...Array(totalPages)].map((_, i) => (
                   <button
-                    key={bIdx}
-                    onClick={btn.fn}
-                    disabled={btn.disabled}
-                    className="w-8 h-8 flex items-center justify-center text-[10px] font-black border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-10 h-10 rounded-xl font-bold transition-all ${safePage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
                   >
-                    {btn.icon}
+                    {i + 1}
                   </button>
                 ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                >
+                  <ChevronRight size={20} className="text-slate-600" />
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

@@ -18,6 +18,39 @@ import {
   Home
 } from "lucide-react";
 
+const SubMenuItem = ({ label, onClick, isActive }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+      style={{
+        cursor: "pointer",
+        padding: "8px",
+        borderRadius: "12px",
+        background: isActive 
+          ? "linear-gradient(90deg, #0ea5e925 0%, #ffffff00 100%)" 
+          : isHovered 
+            ? "linear-gradient(90deg, #0ea5e915 0%, #ffffff00 100%)" 
+            : "transparent",
+        color: isActive || isHovered ? "#0369a1" : "#1e293b",
+        fontWeight: isActive ? "700" : "500",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        display: "flex",
+        alignItems: "center",
+        fontSize: "14px",
+        gap: "10px",
+        borderLeft: (isActive || isHovered) ? "5px solid #0ea5e9" : "5px solid transparent",
+        boxShadow: (isActive || isHovered) ? "0 4px 20px rgba(14, 165, 233, 0.15)" : "none",
+        transform: isHovered ? "translateX(6px)" : "translateX(0)",
+      }}
+    >
+      {label}
+    </div>
+  );
+};
+
 export const Sidebar = () => {
   const [activePanel, setActivePanel] = useState(null);
   const [hovered, setHovered] = useState(null);
@@ -248,10 +281,10 @@ export const Sidebar = () => {
         {activePanel === "dashboard" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -267,47 +300,34 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/livedashboard"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/livedashboard"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              <SubMenuItem
+                label="Live Dashboard"
+                isActive={location.pathname === "/OrganizerHome/livedashboard"}
                 onClick={() => {
                   navigate("/OrganizerHome/livedashboard");
                   setActivePanel(null);
                 }}
-              >
-                Live Dashboard
-              </span>
+              />
 
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Live Food Dashboard"
+                isActive={location.pathname === "/OrganizerHome/livedashfoodboard"}
                 onClick={() => {
                   navigate("/OrganizerHome/livedashfoodboard");
                   setActivePanel(null);
                 }}
-              >
-                Live Food Dashboard
-              </span>
+              />
 
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Organizer Dashboard"
+                isActive={location.pathname === "/OrganizerHome/Organizerdashboard"}
                 onClick={() => {
                   navigate("/OrganizerHome/Organizerdashboard");
                   setActivePanel(null);
                 }}
-              >
-                Organizer Dashboard
-              </span>
+              />
             </div>
           </div>
         )}
@@ -317,10 +337,10 @@ export const Sidebar = () => {
         {activePanel === "myevent" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -336,181 +356,97 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Add-On Check-In / Check-Out"
+                isActive={location.pathname === "/OrganizerHome/AddonCheckIn"}
                 onClick={() => {
                   navigate("/OrganizerHome/AddonCheckIn");
                   setActivePanel(null);
                 }}
-              >
-                Add-On Check-In / Check-Out
-              </span>
+              />
 
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Add-On Spot"
+                isActive={location.pathname === "/OrganizerHome/SportBooking"}
                 onClick={() => {
                   navigate("/OrganizerHome/SportBooking");
                   setActivePanel(null);
                 }}
-              >
-                Add-On Spot
-              </span>
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/Coupon"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/Coupon"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              />
+
+              <SubMenuItem
+                label="Coupon"
+                isActive={location.pathname === "/OrganizerHome/Coupon"}
                 onClick={() => {
                   navigate("/OrganizerHome/Coupon");
                   setActivePanel(null);
                 }}
-              >
-                Coupon
-              </span>
+              />
 
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/CrenteEvent"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/CrenteEvent"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              <SubMenuItem
+                label="Create Event"
+                isActive={location.pathname === "/OrganizerHome/CrenteEvent"}
                 onClick={() => {
                   navigate("/OrganizerHome/CrenteEvent");
                   setActivePanel(null);
                 }}
-              >
-                Create Event
-              </span>
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/EventCheckIn"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/EventCheckIn"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              />
+
+              <SubMenuItem
+                label="Event Check-In/Check-Out"
+                isActive={location.pathname === "/OrganizerHome/EventCheckIn"}
                 onClick={() => {
                   navigate("/OrganizerHome/EventCheckIn");
                   setActivePanel(null);
                 }}
-              >
-                Event Check-In/Check-Out
-              </span>
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/FoodCheckIn"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/FoodCheckIn"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              />
+
+              <SubMenuItem
+                label="Food Check-In/Check-Out"
+                isActive={location.pathname === "/OrganizerHome/FoodCheckIn"}
                 onClick={() => {
                   navigate("/OrganizerHome/FoodCheckIn");
                   setActivePanel(null);
                 }}
-              >
-                Food Check-In/Check-Out
-              </span>
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/messages"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/messages"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              />
+
+              <SubMenuItem
+                label="Messages & Greetings"
+                isActive={location.pathname === "/OrganizerHome/messages"}
                 onClick={() => {
                   navigate("/OrganizerHome/messages");
                   setActivePanel(null);
                 }}
-              >
-                Messages & Greetings
-              </span>
+              />
 
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/Pass"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/Pass"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              <SubMenuItem
+                label="Pass"
+                isActive={location.pathname === "/OrganizerHome/Pass"}
                 onClick={() => {
                   navigate("/OrganizerHome/Pass");
                   setActivePanel(null);
                 }}
-              >
-                Pass
-              </span>
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/Todo_task"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/Todo_task"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              />
+
+              <SubMenuItem
+                label="Todo Task"
+                isActive={location.pathname === "/OrganizerHome/Todo_task"}
                 onClick={() => {
                   navigate("/OrganizerHome/Todo_task");
                   setActivePanel(null);
                 }}
-              >
-                Todo Task
-              </span>
-              <span
-                style={{
-                  cursor: "pointer",
-                  fontWeight:
-                    location.pathname === "/OrganizerHome/Verify_Event"
-                      ? "bold"
-                      : "normal",
-                  color:
-                    location.pathname === "/OrganizerHome/Verify_Event"
-                      ? "#0284c7"
-                      : "black",
-                }}
+              />
+
+              <SubMenuItem
+                label="Verify Event"
+                isActive={location.pathname === "/OrganizerHome/Verify_Event"}
                 onClick={() => {
                   navigate("/OrganizerHome/Verify_Event");
                   setActivePanel(null);
                 }}
-              >
-                Verify Event
-              </span>
+              />
             </div>
           </div>
         )}
@@ -520,10 +456,10 @@ export const Sidebar = () => {
         {activePanel === "Program" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -539,55 +475,52 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Abstract Verification"
+                isActive={location.pathname === "/OrganizerHome/Abstract_Verification"}
                 onClick={() => {
                   navigate("/OrganizerHome/Abstract_Verification");
                   setActivePanel(null);
                 }}
-              >
-                Abstract Verification
-              </span>
+              />
 
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Bulk and Pass Generation"
+                isActive={location.pathname === "/OrganizerHome/BulkPassPage"}
                 onClick={() => {
                   navigate("/OrganizerHome/BulkPassPage");
                   setActivePanel(null);
                 }}
-              >
-                Bulk and Pass Generation
-              </span>
+              />
 
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Create Program"
+                isActive={location.pathname === "/OrganizerHome/CreateProgram"}
                 onClick={() => {
                   navigate("/OrganizerHome/CreateProgram");
                   setActivePanel(null);
                 }}
-              >
-                Create Program
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+
+              <SubMenuItem
+                label="Program Check In"
+                isActive={location.pathname === "/OrganizerHome/ProgramCheckin"}
                 onClick={() => {
                   navigate("/OrganizerHome/ProgramCheckin");
                   setActivePanel(null);
                 }}
-              >
-                Program Check In
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+
+              <SubMenuItem
+                label="Program Verification"
+                isActive={location.pathname === "/OrganizerHome/ProgramVerification"}
                 onClick={() => {
                   navigate("/OrganizerHome/ProgramVerification");
                   setActivePanel(null);
                 }}
-              >
-                Program Verification
-              </span>
+              />
             </div>
           </div>
         )}
@@ -595,10 +528,10 @@ export const Sidebar = () => {
         {activePanel === "Help&Support" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -614,36 +547,34 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Complaint"
+                isActive={location.pathname === "/OrganizerHome/Complaint_page"}
                 onClick={() => {
                   navigate("/OrganizerHome/Complaint_page");
                   setActivePanel(null);
                 }}
-              >
-                Complaint
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+              <SubMenuItem
+                label="Feedback"
+                isActive={location.pathname === "/OrganizerHome/Feedback_page"}
                 onClick={() => {
                   navigate("/OrganizerHome/Feedback_page");
                   setActivePanel(null);
                 }}
-              >
-                Feedback
-              </span>
+              />
             </div>
           </div>
         )}
         {activePanel === "Sponsorships" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -659,17 +590,16 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Sponsorships"
+                isActive={location.pathname === "/OrganizerHome/SponsorshipPage"}
                 onClick={() => {
                   navigate("/OrganizerHome/SponsorshipPage");
                   setActivePanel(null);
                 }}
-              >
-                Sponsorships
-              </span>
+              />
             </div>
           </div>
         )}
@@ -677,10 +607,10 @@ export const Sidebar = () => {
         {activePanel === "Account" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -696,27 +626,26 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Receipt"
+                isActive={location.pathname === "/OrganizerHome/Receipt"}
                 onClick={() => {
                   navigate("/OrganizerHome/Receipt");
                   setActivePanel(null);
                 }}
-              >
-                Receipt
-              </span>
+              />
             </div>
           </div>
         )}
         {activePanel === "Report" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -732,17 +661,16 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Reports"
+                isActive={location.pathname === "/OrganizerHome/EventReports"}
                 onClick={() => {
                   navigate("/OrganizerHome/EventReports");
                   setActivePanel(null);
                 }}
-              >
-                Receipt
-              </span>
+              />
             </div>
           </div>
         )}
@@ -750,10 +678,10 @@ export const Sidebar = () => {
         {activePanel === "Stall&Management" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -769,27 +697,26 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Manage Stall"
+                isActive={location.pathname === "/OrganizerHome/Manage_Stall"}
                 onClick={() => {
                   navigate("/OrganizerHome/Manage_Stall");
                   setActivePanel(null);
                 }}
-              >
-                Manage Stall
-              </span>
+              />
             </div>
           </div>
         )}
         {activePanel === "Approval" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -805,17 +732,16 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Approval Work Flow"
+                isActive={location.pathname === "/OrganizerHome/AdminApproval"}
                 onClick={() => {
                   navigate("/OrganizerHome/AdminApproval");
                   setActivePanel(null);
                 }}
-              >
-                Approval Work Flow
-              </span>
+              />
             </div>
           </div>
         )}
@@ -823,10 +749,10 @@ export const Sidebar = () => {
         {activePanel === "User&Setting" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -842,44 +768,40 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="My Billing"
+                isActive={location.pathname === "/OrganizerHome/Billing"}
                 onClick={() => {
                   navigate("/OrganizerHome/Billing");
                   setActivePanel(null);
                 }}
-              >
-                My Billing
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+              <SubMenuItem
+                label="My Contacts"
+                isActive={location.pathname === "/OrganizerHome/Contacts"}
                 onClick={() => {
                   navigate("/OrganizerHome/Contacts");
                   setActivePanel(null);
                 }}
-              >
-                My Contacts
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+              <SubMenuItem
+                label="My Profile"
+                isActive={location.pathname === "/OrganizerHome/MyProfile"}
                 onClick={() => {
                   navigate("/OrganizerHome/MyProfile");
                   setActivePanel(null);
                 }}
-              >
-                My Profile
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+              <SubMenuItem
+                label="My Plan"
+                isActive={location.pathname === "/OrganizerHome/MyPlan"}
                 onClick={() => {
                   navigate("/OrganizerHome/MyPlan");
                   setActivePanel(null);
                 }}
-              >
-                My Plan
-              </span>
+              />
             </div>
           </div>
         )}
@@ -887,10 +809,10 @@ export const Sidebar = () => {
         {activePanel === "Users" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -906,64 +828,59 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Exhibitor Spot Registration"
+                isActive={location.pathname === "/OrganizerHome/ExhibitorSpotRegistration"}
                 onClick={() => {
                   navigate("/OrganizerHome/ExhibitorSpotRegistration");
                   setActivePanel(null);
                 }}
-              >
-                Exhibitor Spot Registration
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+              <SubMenuItem
+                label="Exhibitor"
+                isActive={location.pathname === "/OrganizerHome/Exhibitor"}
                 onClick={() => {
                   navigate("/OrganizerHome/Exhibitor");
                   setActivePanel(null);
                 }}
-              >
-                Exhibitor
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+              <SubMenuItem
+                label="RoleScreen"
+                isActive={location.pathname === "/OrganizerHome/RoleScreen"}
                 onClick={() => {
                   navigate("/OrganizerHome/RoleScreen");
                   setActivePanel(null);
                 }}
-              >
-                RoleScreen
-              </span>
+              />
               
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="UserScreen"
+                isActive={location.pathname === "/OrganizerHome/UserScreen"}
                 onClick={() => {
                   navigate("/OrganizerHome/UserScreen");
                   setActivePanel(null);
                 }}
-              >
-                UserScreen
-              </span>
-              <span
-                style={{ cursor: "pointer" }}
+              />
+              <SubMenuItem
+                label="User"
+                isActive={location.pathname === "/OrganizerHome/User"}
                 onClick={() => {
                   navigate("/OrganizerHome/User");
                   setActivePanel(null);
                 }}
-              >
-                User
-              </span>
+              />
             </div>
           </div>
         )}
         {activePanel === "Master" && (
           <div
             style={{
-              width: "260px",
+              width: "240px",
               height: "100%", overflowY: "auto",
               background: "#e0f2fe",
-              padding: "25px",
+              padding: "10px",
               boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
               zIndex: 40,
             }}
@@ -979,37 +896,34 @@ export const Sidebar = () => {
             </h3>
 
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Policy"
+                isActive={location.pathname === "/OrganizerHome/PolicyPage"}
                 onClick={() => {
                   navigate("/OrganizerHome/PolicyPage");
                   setActivePanel(null);
                 }}
-              >
-                Policy
-              </span>
+              />
 
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Venue"
+                isActive={location.pathname === "/OrganizerHome/Venu"}
                 onClick={() => {
                   navigate("/OrganizerHome/Venu");
                   setActivePanel(null);
                 }}
-              >
-                Venue
-              </span>
+              />
 
-              <span
-                style={{ cursor: "pointer" }}
+              <SubMenuItem
+                label="Vendor"
+                isActive={location.pathname === "/OrganizerHome/Vendor"}
                 onClick={() => {
                   navigate("/OrganizerHome/Vendor");
                   setActivePanel(null);
                 }}
-              >
-                Vendor
-              </span>
+              />
             </div>
           </div>
         )}

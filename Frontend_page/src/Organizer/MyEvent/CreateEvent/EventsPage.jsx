@@ -72,6 +72,7 @@ const EventsPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const Redexorganizer = useSelector((state) => state.user);
   const storedUser = {
@@ -149,17 +150,10 @@ const EventsPage = () => {
   );
 
   // ================= PAGINATION LOGIC =================
-  const getEventsPerPage = () => {
-    if (viewMode === "large" || viewMode === "medium") return 6;
-    if (viewMode === "small" || viewMode === "compact") return 10;
-    return 10; // Default for list/details
-  };
-
-  const eventsPerPage = getEventsPerPage();
-  const indexOfLastEvent = currentPage * eventsPerPage;
-  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+  const indexOfLastEvent = currentPage * itemsPerPage;
+  const indexOfFirstEvent = indexOfLastEvent - itemsPerPage;
   const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+  const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -577,39 +571,63 @@ const EventsPage = () => {
       </div>
 
       {/* PAGINATION CONTROLS */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mb-12">
-          <button
-            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="flex gap-2">
-            {[...Array(totalPages)].map((_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all shadow-sm ${
-                  currentPage === i + 1
-                    ? "bg-indigo-600 text-white"
-                    : "bg-white text-gray-600 border border-gray-200 hover:bg-indigo-50 hover:text-indigo-600"
-                }`}
+      {filteredEvents.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-12 gap-4">
+          <div className="flex items-center gap-4">
+            <p className="text-gray-500 text-sm font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredEvents.length)} of {filteredEvents.length} events
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500 text-sm font-medium">Records per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="p-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm"
               >
-                {i + 1}
-              </button>
-            ))}
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
           </div>
 
-          <button
-            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm"
-          >
-            <ChevronRight size={20} />
-          </button>
+          {totalPages > 1 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={`w-10 h-10 rounded-xl font-bold transition-all shadow-sm ${
+                    currentPage === i + 1
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white text-gray-600 border border-gray-200 hover:bg-indigo-50 hover:text-indigo-600"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

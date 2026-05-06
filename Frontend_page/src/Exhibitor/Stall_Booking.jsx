@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Upload, User, Mail, Phone, Building2, MapPin, FileText } from "lucide-react";
+import { Send, Upload, User, Mail, Phone, Building2, MapPin, FileText, CheckCircle, AlertCircle, X } from "lucide-react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { bookStall, getEventById, getCountries, getStates, getCities } from "../Services/api";
 import { useSelector } from "react-redux";
@@ -12,6 +12,7 @@ const Stall = () => {
 
   const [eventName, setEventName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
 
 
   const initialFormData = {
@@ -75,6 +76,18 @@ const Stall = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Auto-close toast after 5 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
+
   const loadCountries = async () => {
     try {
       const data = await getCountries();
@@ -102,13 +115,13 @@ const Stall = () => {
     }
   };
   useEffect(() => {
-  if (eventName) {
-    setFormData((prev) => ({
-      ...prev,
-      eventName: eventName,
-    }));
-  }
-}, [eventName]);
+    if (eventName) {
+      setFormData((prev) => ({
+        ...prev,
+        eventName: eventName,
+      }));
+    }
+  }, [eventName]);
 
   const fetchEvent = async () => {
     try {
@@ -164,10 +177,25 @@ const Stall = () => {
 
     const newErrors = {};
     const requiredFields = ['firstName', 'lastName', 'email', 'mobile', 'companyName', 'country', 'state', 'city', 'address', 'stallArea', 'products', 'pinCode'];
-    
+
+    const fieldLabels = {
+      firstName: "First Name",
+      lastName: "Last Name",
+      email: "Email",
+      mobile: "Mobile Number",
+      companyName: "Company Name",
+      country: "Country",
+      state: "State",
+      city: "City",
+      address: "Address",
+      stallArea: "Stall Area",
+      products: "Products",
+      pinCode: "Pin Code"
+    };
+
     requiredFields.forEach(field => {
       if (!formData[field] || (typeof formData[field] === 'string' && formData[field].trim() === "")) {
-        newErrors[field] = "This field is required";
+        newErrors[field] = ` ${fieldLabels[field] || field} field is required`;
       }
     });
 
@@ -198,12 +226,16 @@ const Stall = () => {
 
     try {
       const res = await bookStall(submitData);
-      console.log(submitData);
-      navigate("/exhibitor/dashboard");
+      showToast("✓ Stall Booked Successfully!", "success");
       setFormData(initialFormData);
+      
+      // Delay navigation to allow user to see the success toast
+      setTimeout(() => {
+        navigate("/exhibitor/dashboard");
+      }, 3000);
     } catch (err) {
       console.error(err);
-
+      showToast(err.response?.data?.message || "Failed to book stall. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -211,6 +243,36 @@ const Stall = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <div
+          className={`fixed top-6 right-6 flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl z-[9999] animate-in fade-in slide-in-from-right duration-300 border-l-4 ${toast.type === "success"
+            ? "bg-white border-emerald-500"
+            : "bg-white border-rose-500"
+            }`}
+        >
+          <div className={`p-2 rounded-xl ${toast.type === "success" ? "bg-emerald-100" : "bg-rose-100"}`}>
+            {toast.type === "success" ? (
+              <CheckCircle size={20} className="text-emerald-600" />
+            ) : (
+              <AlertCircle size={20} className="text-rose-600" />
+            )}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-slate-800 font-bold text-sm tracking-tight">
+              {toast.type === "success" ? "Success" : "Notification"}
+            </span>
+            <span className="text-slate-500 text-xs font-medium">{toast.message}</span>
+          </div>
+          <button
+            onClick={() => setToast(null)}
+            className="ml-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-200 to-transparent rounded-full opacity-20 blur-3xl animate-float"></div>
@@ -234,7 +296,7 @@ const Stall = () => {
           </div>
 
           {/* Form Card */}
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-bottom-8 duration-700" style={{backdropFilter: 'blur(10px)'}}>
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-bottom-8 duration-700" style={{ backdropFilter: 'blur(10px)' }}>
             {/* Form Header Bar */}
             <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
 
@@ -271,11 +333,11 @@ const Stall = () => {
                         name="firstName"
                         value={formData.firstName}
                         placeholder="John"
-                        
+
                         onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                        className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.firstName ? "border-red-500" : "border-gray-200"}`}
                       />
-                      {errors.firstName && <p className="text-red-400 text-xs mt-1">{errors.firstName}</p>}
+                      {errors.firstName && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.firstName}</p>}
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
@@ -284,11 +346,11 @@ const Stall = () => {
                         name="lastName"
                         value={formData.lastName}
                         placeholder="Doe"
-                      
+
                         onChange={handleChange}
-                        className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                        className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.lastName ? "border-red-500" : "border-gray-200"}`}
                       />
-                      {errors.lastName && <p className="text-red-400 text-xs mt-1">{errors.lastName}</p>}
+                      {errors.lastName && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.lastName}</p>}
                     </div>
                   </div>
                 </div>
@@ -304,11 +366,11 @@ const Stall = () => {
                       name="email"
                       value={formData.email}
                       placeholder="john@company.com"
-                      
+
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.email ? "border-red-500" : "border-gray-200"}`}
                     />
-                    {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                    {errors.email && <p className="text-red-400 text-xs mt-1 relative left-2">{errors.email}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
@@ -320,11 +382,11 @@ const Stall = () => {
                       value={formData.mobile}
                       placeholder="10 Digits"
                       maxLength="10"
-                      
+
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.mobile ? "border-red-500" : "border-gray-200"}`}
                     />
-                    {errors.mobile && <p className="text-red-400 text-xs mt-1">{errors.mobile}</p>}
+                    {errors.mobile && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.mobile}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Designation</label>
@@ -339,7 +401,7 @@ const Stall = () => {
                   </div>
                 </div>
 
-          
+
                 {/* Company, Stall Area, Products */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
@@ -350,9 +412,9 @@ const Stall = () => {
                       value={formData.companyName}
                       placeholder="Your Company"
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.companyName ? "border-red-500" : "border-gray-200"}`}
                     />
-                    {errors.companyName && <p className="text-red-400 text-xs mt-1">{errors.companyName}</p>}
+                    {errors.companyName && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.companyName}</p>}
                   </div>
 
                   <div>
@@ -363,8 +425,9 @@ const Stall = () => {
                       value={formData.stallArea}
                       placeholder="Stall Area"
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.stallArea ? "border-red-500" : "border-gray-200"}`}
                     />
+                    {errors.stallArea && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.stallArea}</p>}
                   </div>
 
                   <div>
@@ -375,8 +438,9 @@ const Stall = () => {
                       value={formData.products}
                       placeholder="Products"
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.products ? "border-red-500" : "border-gray-200"}`}
                     />
+                    {errors.products && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.products}</p>}
                   </div>
                 </div>
               </div>
@@ -401,9 +465,8 @@ const Stall = () => {
                         setErrors(prev => ({ ...prev, country: "" }));
                       }}
                       onFocus={() => setShowCountryDropdown(true)}
-                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${
-                        errors.country ? "border-red-500" : "border-gray-200"
-                      }`}
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.country ? "border-red-500" : "border-gray-200"
+                        }`}
                     />
                     {showCountryDropdown && (
                       <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
@@ -431,11 +494,11 @@ const Stall = () => {
                         {countries.filter((c) =>
                           c.country_name.toLowerCase().includes(countrySearch.toLowerCase())
                         ).length === 0 && (
-                          <div className="p-2 text-gray-400 text-sm">No results found</div>
-                        )}
+                            <div className="p-2 text-gray-400 text-sm">No results found</div>
+                          )}
                       </div>
                     )}
-                    {errors.country && <p className="text-red-400 text-xs mt-1">{errors.country}</p>}
+                    {errors.country && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.country}</p>}
                   </div>
 
                   <div className="relative" ref={stateRef}>
@@ -450,9 +513,8 @@ const Stall = () => {
                         setErrors(prev => ({ ...prev, state: "" }));
                       }}
                       onFocus={() => setShowStateDropdown(true)}
-                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${
-                        errors.state ? "border-red-500" : "border-gray-200"
-                      }`}
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.state ? "border-red-500" : "border-gray-200"
+                        }`}
                     />
                     {showStateDropdown && (
                       <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
@@ -479,13 +541,13 @@ const Stall = () => {
                         {states.filter((s) =>
                           s.state_name.toLowerCase().includes(stateSearch.toLowerCase())
                         ).length === 0 && (
-                          <div className="p-2 text-gray-400 text-sm italic">
-                            {!formData.country ? "Please select a country first" : "No results found"}
-                          </div>
-                        )}
+                            <div className="p-2 text-gray-400 text-sm italic">
+                              {!formData.country ? "Please select a country first" : "No results found"}
+                            </div>
+                          )}
                       </div>
                     )}
-                    {errors.state && <p className="text-red-400 text-xs mt-1">{errors.state}</p>}
+                    {errors.state && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.state}</p>}
                   </div>
 
                   <div className="relative" ref={cityRef}>
@@ -500,9 +562,8 @@ const Stall = () => {
                         setErrors(prev => ({ ...prev, city: "" }));
                       }}
                       onFocus={() => setShowCityDropdown(true)}
-                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${
-                        errors.city ? "border-red-500" : "border-gray-200"
-                      }`}
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.city ? "border-red-500" : "border-gray-200"
+                        }`}
                     />
                     {showCityDropdown && (
                       <div className="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-lg">
@@ -527,13 +588,13 @@ const Stall = () => {
                         {cities.filter((c) =>
                           c.city_name.toLowerCase().includes(citySearch.toLowerCase())
                         ).length === 0 && (
-                          <div className="p-2 text-gray-400 text-sm italic">
-                            {!formData.state ? "Please select a state first" : "No results found"}
-                          </div>
-                        )}
+                            <div className="p-2 text-gray-400 text-sm italic">
+                              {!formData.state ? "Please select a state first" : "No results found"}
+                            </div>
+                          )}
                       </div>
                     )}
-                    {errors.city && <p className="text-red-400 text-xs mt-1">{errors.city}</p>}
+                    {errors.city && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.city}</p>}
                   </div>
                 </div>
 
@@ -548,9 +609,9 @@ const Stall = () => {
                       placeholder="Pin Code"
                       maxLength="6"
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white"
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white ${errors.pinCode ? "border-red-500" : "border-gray-200"}`}
                     />
-                    {errors.pinCode && <p className="text-red-400 text-xs mt-1">{errors.pinCode}</p>}
+                    {errors.pinCode && <p className="text-red-400 text-xs mt-1 relative left-1">{errors.pinCode}</p>}
                   </div>
                 </div>
 
@@ -563,7 +624,7 @@ const Stall = () => {
                       placeholder="Street address"
                       maxLength="100"
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white h-16 resize-none"
+                      className={`w-full px-3 py-2 rounded-lg border bg-gray-50 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all hover:bg-white h-16 resize-none ${errors.address ? "border-red-500" : "border-gray-200"}`}
                     />
                     {errors.address && <p className="text-red-400 text-xs mt-1">{errors.address}</p>}
                     <p className="text-xs text-gray-400 mt-0.5">{formData.address.length}/100</p>

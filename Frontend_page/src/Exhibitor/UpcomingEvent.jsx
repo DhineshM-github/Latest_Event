@@ -146,11 +146,10 @@ const ExhibitorHome = () => {
                       setShowViewMenu(false);
                       setCurrentPage(1); // Reset to first page on view change
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/50 transition-colors ${
-                      viewMode === mode.id
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/50 transition-colors ${viewMode === mode.id
                         ? "text-orange-500 bg-orange-500/5 font-bold"
                         : "text-slate-400 hover:text-slate-200"
-                    }`}
+                      }`}
                   >
                     <mode.icon size={18} />
                     <span className="text-sm">{mode.name}</span>
@@ -182,19 +181,17 @@ const ExhibitorHome = () => {
             currentEvents.map((event) => (
               <div
                 key={event.id}
-                className={`group bg-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-orange-500/30 hover:shadow-[0_20px_50px_rgba(249,115,22,0.1)] transition-all duration-500 ${
-                  viewMode === "list"
+                className={`group bg-slate-900/40 rounded-3xl overflow-hidden border border-slate-800 hover:border-orange-500/30 hover:shadow-[0_20px_50px_rgba(249,115,22,0.1)] transition-all duration-500 ${viewMode === "list"
                     ? "flex flex-row items-center p-4 gap-6 h-auto"
                     : "flex flex-col"
-                }`}
+                  }`}
               >
                 {/* Image Section */}
                 <div
-                  className={`relative overflow-hidden shrink-0 ${
-                    viewMode === "list"
+                  className={`relative overflow-hidden shrink-0 ${viewMode === "list"
                       ? "w-24 h-24 rounded-2xl"
                       : "w-full h-48 md:h-52"
-                  }`}
+                    }`}
                 >
                   <MediaRenderer
                     src={event.image}
@@ -214,21 +211,19 @@ const ExhibitorHome = () => {
 
                 {/* Content Section */}
                 <div
-                  className={`flex ${
-                    viewMode === "list"
+                  className={`flex ${viewMode === "list"
                       ? "flex-row items-center justify-between flex-1 gap-6"
                       : "flex-col p-6 flex-1"
-                  }`}
+                    }`}
                 >
                   <div
                     className={`${viewMode === "list" ? "flex flex-row items-center gap-8 flex-1" : "space-y-3"}`}
                   >
                     <h2
-                      className={`font-bold text-slate-100 group-hover:text-orange-400 transition-colors ${
-                        viewMode === "compact"
+                      className={`font-bold text-slate-100 group-hover:text-orange-400 transition-colors ${viewMode === "compact"
                           ? "text-sm"
                           : "text-lg md:text-xl"
-                      } ${viewMode === "list" ? "w-1/4 truncate" : ""}`}
+                        } ${viewMode === "list" ? "w-1/4 truncate" : ""}`}
                     >
                       {event.title}
                     </h2>
@@ -282,13 +277,12 @@ const ExhibitorHome = () => {
 
                   <button
                     onClick={() => handleBookStall(event)}
-                    className={`flex items-center justify-center gap-2 font-bold rounded-2xl transition-all duration-300 shrink-0 ${
-                      viewMode === "list"
+                    className={`flex items-center justify-center gap-2 font-bold rounded-2xl transition-all duration-300 shrink-0 ${viewMode === "list"
                         ? "px-8 py-3 bg-gradient-to-r from-orange-500 to-rose-500 hover:shadow-[0_10px_20px_rgba(249,115,22,0.3)] active:scale-95 w-auto"
                         : viewMode === "compact"
                           ? "mt-4 py-2 text-xs bg-gradient-to-r from-orange-500 to-rose-500 hover:shadow-[0_10px_20px_rgba(249,115,22,0.3)] active:scale-95 w-full"
                           : "mt-4 py-3 bg-gradient-to-r from-orange-500 to-rose-500 hover:shadow-[0_10px_20px_rgba(249,115,22,0.3)] active:scale-95 w-full"
-                    }`}
+                      }`}
                   >
                     <span>Book Stall</span>
                     <ArrowRight
@@ -321,11 +315,10 @@ const ExhibitorHome = () => {
                 <button
                   key={i}
                   onClick={() => paginate(i + 1)}
-                  className={`w-12 h-12 rounded-2xl font-bold transition-all duration-500 ${
-                    currentPage === i + 1
+                  className={`w-12 h-12 rounded-2xl font-bold transition-all duration-500 ${currentPage === i + 1
                       ? "bg-gradient-to-br from-orange-500 to-rose-500 text-white shadow-lg shadow-orange-500/20"
                       : "bg-slate-900 text-slate-500 border border-slate-800 hover:border-orange-500/30"
-                  }`}
+                    }`}
                 >
                   {i + 1}
                 </button>

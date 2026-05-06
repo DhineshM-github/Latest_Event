@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function PassGeneration() {
   const [search, setSearch] = useState("");
@@ -62,19 +62,39 @@ export default function PassGeneration() {
           </table>
         </div>
 
-        {/* Pagination Footer */}
-        <div style={{ padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, borderTop: "1px solid #e2e8f0" }}>
-          <span style={{ fontSize: 13, color: "#64748b", marginRight: 8 }}>Showing 0 to 0 of 0 entries</span>
+        {/* Pagination Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-4">
+            <p className="text-slate-500 text-sm font-medium">
+              Showing 0 to 0 of 0 entries
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+              <select
+                className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
 
-          {["«", "‹", "›", "»"].map((ch) => (
-            <button key={ch} disabled style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 13, color: "#64748b", background: "white", cursor: "not-allowed", opacity: 0.4 }}>
-              {ch}
+          <div className="flex gap-2">
+            <button
+              disabled
+              className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+            >
+              <ChevronLeft size={20} className="text-slate-600" />
             </button>
-          ))}
-
-          <select style={{ border: "1px solid #cbd5e1", borderRadius: 4, padding: "4px 8px", fontSize: 13, color: "#475569", background: "white", marginLeft: 4 }}>
-            <option>10</option>
-          </select>
+            <button
+              disabled
+              className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+            >
+              <ChevronRight size={20} className="text-slate-600" />
+            </button>
+          </div>
         </div>
 
       </div>

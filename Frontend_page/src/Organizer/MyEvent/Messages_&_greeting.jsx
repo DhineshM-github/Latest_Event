@@ -41,6 +41,34 @@ function Spinner({ size = "h-4 w-4" }) {
   );
 }
 
+// ─── Modals ──────────────────────────────────────────────────────────────────
+function DeleteConfirmModal({ isOpen, onConfirm, onCancel, loading }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-[1000] p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="p-10 text-center">
+          <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+            <div className="w-16 h-16 bg-rose-500 rounded-full flex items-center justify-center text-white text-3xl shadow-lg shadow-rose-200">
+              !
+            </div>
+          </div>
+          <h3 className="text-3xl font-black text-slate-800 mb-3 tracking-tight">Are you sure?</h3>
+          <p className="text-slate-500 font-bold leading-relaxed px-4">Do you really want to delete this message? This action cannot be undone.</p>
+        </div>
+        <div className="flex gap-4 p-6 bg-slate-50/50 border-t border-slate-100">
+          <button onClick={onCancel} className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 font-black rounded-[1.5rem] hover:bg-slate-100 transition-all active:scale-[0.98]">
+            Cancel
+          </button>
+          <button onClick={onConfirm} disabled={loading} className="flex-1 py-4 bg-rose-500 hover:bg-rose-600 text-white font-black rounded-[1.5rem] shadow-xl shadow-rose-200 transition-all active:scale-[0.98] disabled:opacity-50">
+            {loading ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Shared Pagination ────────────────────────────────────────────────────────
 function Pagination({ page, totalPages, setPage, totalItems, perPage, onPerPageChange }) {
   const from = totalItems === 0 ? 0 : (page - 1) * perPage + 1;
@@ -234,6 +262,17 @@ function Page2() {
   const perPage = 10;
   const editorRef = useRef(null);
 
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
+  const [deleting, setDeleting] = useState(false);
+
+  const showNotification = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 3000);
+  };
+
   // ✅ On mount (and whenever eventId changes), fetch event info + existing messages
   useEffect(() => {
     if (!eventId) return;
@@ -321,11 +360,12 @@ function Page2() {
         fetchMessages();
         setPage(1);
         handleClear();
+        showNotification("Message saved successfully!");
       } else {
-        alert("Error saving: " + (result.error || "Unknown error"));
+        showNotification("Error saving: " + (result.error || "Unknown error"), "error");
       }
     } catch (e) {
-      alert("Error: " + e.message);
+      showNotification("Error: " + e.message, "error");
     } finally {
       setSaving(false);
     }
@@ -339,13 +379,24 @@ function Page2() {
 
   // ✅ Delete — re-fetch after deletion to sync UI with DB
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this message?")) return;
+    setDeleteModal({ isOpen: true, id });
+  };
 
+  const confirmDelete = async () => {
+    if (!deleteModal.id) return;
+    setDeleting(true);
     try {
-      const result = await deleteMessage(id);
-      if (result.success) fetchMessages();
+      const result = await deleteMessage(deleteModal.id);
+      if (result.success) {
+        fetchMessages();
+        showNotification("Message deleted successfully!");
+      }
     } catch (e) {
       console.error(e);
+      showNotification("Failed to delete message", "error");
+    } finally {
+      setDeleting(false);
+      setDeleteModal({ isOpen: false, id: null });
     }
   };
 
@@ -569,6 +620,26 @@ function Page2() {
             />
           </div>
         </div>
+
+        {/* TOAST NOTIFICATION */}
+        {toast.show && (
+          <div className={`fixed top-10 right-10 z-[250] px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-10 duration-500 flex items-center gap-4 border ${toast.type === "success"
+              ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-200"
+              : "bg-rose-600 text-white border-rose-500 shadow-rose-200"
+            }`}>
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">
+              {toast.type === "success" ? "✓" : "!"}
+            </div>
+            <p className="font-bold text-sm tracking-wide">{toast.message}</p>
+          </div>
+        )}
+
+        <DeleteConfirmModal 
+          isOpen={deleteModal.isOpen} 
+          onConfirm={confirmDelete} 
+          onCancel={() => setDeleteModal({ isOpen: false, id: null })}
+          loading={deleting}
+        />
       </div>
     </div>
   );

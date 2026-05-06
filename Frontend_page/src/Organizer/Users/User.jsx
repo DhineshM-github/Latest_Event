@@ -108,7 +108,7 @@ export default function User() {
   const [page, setPage] = useState("list"); // list | form | view
   const [users, setUsers] = useState(initialUsers);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [entries, setEntries] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
@@ -137,10 +137,10 @@ export default function User() {
     );
   }, [users, searchKeyword]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / entries));
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
   const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * entries,
-    currentPage * entries
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const resetForm = () => {
@@ -171,7 +171,7 @@ export default function User() {
 
     const updatedUsers = users.filter((user) => user.id !== id);
     setUsers(updatedUsers);
-    if ((currentPage - 1) * entries >= updatedUsers.length && currentPage > 1) {
+    if ((currentPage - 1) * itemsPerPage >= updatedUsers.length && currentPage > 1) {
       setCurrentPage((prev) => prev - 1);
     }
   };
@@ -418,67 +418,60 @@ export default function User() {
                 </table>
               </div>
 
-              <div className="mt-3 flex flex-col items-center justify-between gap-4 text-[#66758f] md:flex-row">
-                <p className="text-sm">
-                  Showing {filteredUsers.length === 0 ? 0 : (currentPage - 1) * entries + 1} to{" "}
-                  {Math.min(currentPage * entries, filteredUsers.length)} of {filteredUsers.length} entries
-                </p>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => setCurrentPage(1)}
-                      className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-[#d4d9e2] bg-white disabled:opacity-40"
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronsLeft size={16} />
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                      className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-[#d4d9e2] bg-white disabled:opacity-40"
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button className="h-10 min-w-[46px] rounded-[6px] bg-[#3f5cf4] px-4 text-sm font-semibold text-white">
-                      {currentPage}
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                      className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-[#d4d9e2] bg-white disabled:opacity-40"
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(totalPages)}
-                      className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-[#d4d9e2] bg-white disabled:opacity-40"
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronsRight size={16} />
-                    </button>
+              {/* Pagination Controls */}
+              {filteredUsers.length > 0 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 gap-4 px-4 py-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <p className="text-slate-500 text-sm font-medium">
+                      Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 text-sm font-medium">Records per page:</span>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="p-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer shadow-sm"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
                   </div>
 
-                  <div className="relative">
-                    <select
-                      value={entries}
-                      onChange={(e) => {
-                        setEntries(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      className="h-10 appearance-none rounded-[6px] border border-[#d4d9e2] bg-white pl-4 pr-10 text-sm font-medium text-[#42506c] outline-none"
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                    </select>
-                    <ChevronDown
-                      size={16}
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#73829d]"
-                    />
-                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                      >
+                        <ChevronLeft size={20} className="text-slate-600" />
+                      </button>
+                      {[...Array(totalPages)].map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === i + 1 ? "bg-sky-600 text-white shadow-lg shadow-sky-200" : "bg-white text-slate-600 border border-slate-200 hover:bg-sky-50"}`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-sky-50 disabled:opacity-40 transition-all shadow-sm"
+                      >
+                        <ChevronRight size={20} className="text-slate-600" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
